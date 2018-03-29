@@ -1,0 +1,9 @@
+database class will allow for these types of data:
+
+Database with table named "client_id_info" client ids as primary key and client pubkeys, username, timestamp of creation
+
+Database  with each table name as username and each row representing a wallet associated with username and
+column being wallet nicknames, wallet id, wallet pubkey (hex format), timestamp of creation
+
+database with table named "wallet_id_info" wallet_id as primary key, wallet_pubkey, wallet_nickname,
+timestamp of creation, wallet_balance(could be encrypted)

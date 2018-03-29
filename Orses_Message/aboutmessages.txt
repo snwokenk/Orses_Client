@@ -1,0 +1,3 @@
+Messages are objects.
+Message_managers are objects that updates a message_object when a message is received or sent
+message managers check when the message_object has been exhausted
