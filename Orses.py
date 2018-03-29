@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import font
 from PIL import Image, ImageTk
 
+# TODO: after user successfully loaded or created, make main menu window appear
 
 from Orses_User.User_CLI_Helper import UserCLI, User
 
@@ -19,20 +20,70 @@ class UserAndWalletCommands:
 
         if client_user:
             # start BaseLoggedInWindowClass
-            pass
+
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "Success!\n'{}' Created On Local Machine!\nClient ID:\n{}".format(client_user.username,
+                                                                                           client_user.client_id)
+            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
+                                                  text_color="Green")
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                print(widgets)
+
         elif client_user is False:
-            # password and password retype !=
-            pass
+            # password and password retype != password
+
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "Passwords Do Not Match!"
+            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
+                                                  text_color="Red")
         elif client_user is None:
             # user with username already exists
-            pass
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "'{}' Already Exists On Local Machine!".format(username)
+            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
+                                                  text_color="red")
+
+
+    @staticmethod
+    def load_user(password, username, window_inst):
+        global client_user
+        client_user = UserCLI.load_user(password=password, username=username)
+
+        if client_user:
+
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "Success!\n'{}' Loaded On Local Machine!\nClient ID:\n{}".format(client_user.username,
+                                                                                           client_user.client_id)
+            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
+                                                  text_color="Green")
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                print(widgets)
+
+        elif client_user is False:
+            # Wrong Password
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "Wrong Password!"
+            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
+                                                  text_color="Red")
+        elif client_user is None:
+            # user with username already exists
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "'{}' Does Not Exist On Local Machine!".format(username)
+            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
+                                                  text_color="red")
+
 
 
 class OrsesCommands:
 
     @staticmethod
     def create_user():
-        print(client_user)
         root.withdraw()
         print("User Created")
         create_user_window = BaseFormWindow(root, title="Orses Wallet Client: Create A User")
@@ -70,6 +121,7 @@ class OrsesCommands:
 
     @staticmethod
     def load_user():
+        root.withdraw()
         print("User Loaded")
 
         load_user_window = BaseFormWindow(root, title="Orses Wallet Client: Load A User")
@@ -89,8 +141,20 @@ class OrsesCommands:
         load_user_window.insert_password(font_class=form_label_font)
 
         # row 7 frame with buttons Cancel column 0, submit column 1 (all row 0 of frame)
+        # add command call back to either go back to login menu or Logged In Menu
 
-        load_user_window.insert_cancel_submit_buttons(submit_text="LOAD", button_state="!disabled")
+        load_user_window.insert_cancel_submit_buttons(
+            submit_text="LOAD",
+            button_state="!disabled",
+            command_callback=lambda: UserAndWalletCommands.load_user(
+                password=load_user_window.password_text.get(),
+                username=load_user_window.username_text.get(),
+                window_inst=load_user_window
+            )
+        )
+
+        # Tells program destroy window and bring back up root (user login menu)
+        load_user_window.protocol("WM_DELETE_WINDOW", lambda: (root.deiconify(), load_user_window.destroy()))
 
 
     @staticmethod
@@ -197,10 +261,10 @@ class BaseFormWindow(Toplevel):
         username_label.grid(row=1, sticky=N)
         username_label.grid_configure(padx=self.entry_padx)
 
-
-        username_entry =ttk.Entry(self.mainframe_lower, textvariable=self.username_text, width=36)
+        username_entry =ttk.Entry(self.mainframe_lower, textvariable=self.username_text, width=36, takefocus=True)
         username_entry.grid(row=2, sticky=S)
         username_entry.grid_configure(padx=self.entry_padx, pady=self.entry_pady)
+        username_entry.focus()
 
     def insert_password(self, font_class,label_text="Password:", background_color="#20262b", text_color="white"):
 
@@ -256,10 +320,33 @@ class BaseFormWindow(Toplevel):
 
         # submit button
         submit_button_width = int(self.form_window_width*0.015)
-        self.submit_button = ttk.Button(cancel_submit_frame, text=submit_text, width=cancel_button_width,
+        self.submit_button = ttk.Button(cancel_submit_frame, text=submit_text, width=submit_button_width,
                                    command=command_callback, style="submit.TButton",
                                         state=button_state)
         self.submit_button.grid(row=0, column=1, sticky=E)
+
+    def insert_notification_label(self, text, font_class, background_color="#20262b", text_color="white"):
+
+        continue_button_width = int(self.form_window_width*0.055)
+        x_axis = int((self.form_window_width/5) - (continue_button_width/5))
+        # notif_padx = (int(self.form_window_width*0.15), int(self.form_window_width*0.20))
+        notif_padx = x_axis
+        notif_pady = (int(self.mainframe_lower_height*0.05),
+                       int(self.mainframe_lower_height*0.05))
+        notif_label = ttk.Label(self.mainframe_lower, text=text, background=background_color,
+                                foreground=text_color, font=font_class, relief="ridge",
+                                wraplength=int(self.form_window_width*0.65), justify="center")
+        notif_label.grid(row=9, sticky=N)
+        notif_label.grid_configure(padx=notif_padx, pady=notif_pady)
+        print(notif_label.winfo_width())
+
+
+        continue_button = ttk.Button(self.mainframe_lower, text="CONTINUE", width=continue_button_width,
+                                   command=lambda: (root.deiconify(), self.destroy()), style="cancel.TButton")
+        continue_button.grid(row=10, sticky=(N,S))
+        continue_button.grid_configure(padx=notif_padx, pady=notif_pady)
+
+
 
 
 class BaseLoggedInWindow(Toplevel):
@@ -295,6 +382,7 @@ welcome_font = font.Font(family="clearlyu devanagari", size=24, weight="bold", u
 print(font.families())
 
 form_label_font = font.Font(family="fixed", size=16, weight="normal", underline=True)
+notif_label_font = font.Font(family="fixed", size=16, weight="normal")
 
 
 """

@@ -22,29 +22,11 @@ class UserCLI:
             return None
 
     @staticmethod
-    def load_user():
-        call("clear")
-        print("\n\n*** The Command Line Interface Of The CryptoHub Blockchain Client ***\n\n")
-
-        print("Load User")
-
-        username = input("Username: ")
-
-        password = getpass.getpass("Password: ")
+    def load_user(password, username):
 
         user = User(username=username, password=password, newUser=False).load_user()
 
-        if user:
-            print("User: {} loaded\n".format(user.username))
-            print("client_id: {}. creation_time: {}".format(user.client_id, user.creation_time))
-        elif user is False:
-            print("Wrong Password!\n")
-
-        elif user is None:
-            print("No User By That Name\n")
-
-        input("Press Enter To Continue")
-        call("clear")
+        # user can be None == no user by user name OR False == Wrong password or User_object == User sucessfully loaded
         return user
 
     @staticmethod
