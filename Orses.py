@@ -7,10 +7,22 @@ from PIL import Image, ImageTk
 
 from Orses_User.User_CLI_Helper import UserCLI, User
 
-windows_dict = dict()
 
+def change_user(new_val):
+    global client_user
+    client_user = new_val
+
+
+def change_wallet(new_val):
+    global client_wallet
+    client_wallet = new_val
+
+# these variables will hold a successfully loaded user object and wallet object
 client_user = None
+client_wallet = None
 
+# dictionary to hold windows (if necessary)
+windows_dict = dict()
 
 class UserAndWalletCommands:
     @staticmethod
@@ -25,8 +37,12 @@ class UserAndWalletCommands:
                 widgets.grid_forget()
             valid_text = "Success!\n'{}' Created On Local Machine!\nClient ID:\n{}".format(client_user.username,
                                                                                            client_user.client_id)
-            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
-                                                  text_color="Green")
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Green",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
             for widgets in window_inst.mainframe_lower.grid_slaves():
                 print(widgets)
 
@@ -36,15 +52,23 @@ class UserAndWalletCommands:
             for widgets in window_inst.mainframe_lower.grid_slaves():
                 widgets.grid_forget()
             valid_text = "Passwords Do Not Match!"
-            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
-                                                  text_color="Red")
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Red",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
         elif client_user is None:
             # user with username already exists
             for widgets in window_inst.mainframe_lower.grid_slaves():
                 widgets.grid_forget()
             valid_text = "'{}' Already Exists On Local Machine!".format(username)
-            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
-                                                  text_color="red")
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Red",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
 
 
     @staticmethod
@@ -58,8 +82,12 @@ class UserAndWalletCommands:
                 widgets.grid_forget()
             valid_text = "Success!\n'{}' Loaded On Local Machine!\nClient ID:\n{}".format(client_user.username,
                                                                                            client_user.client_id)
-            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
-                                                  text_color="Green")
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Green",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
             for widgets in window_inst.mainframe_lower.grid_slaves():
                 print(widgets)
 
@@ -68,18 +96,45 @@ class UserAndWalletCommands:
             for widgets in window_inst.mainframe_lower.grid_slaves():
                 widgets.grid_forget()
             valid_text = "Wrong Password!"
-            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
-                                                  text_color="Red")
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Red",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
         elif client_user is None:
             # user with username already exists
             for widgets in window_inst.mainframe_lower.grid_slaves():
                 widgets.grid_forget()
             valid_text = "'{}' Does Not Exist On Local Machine!".format(username)
-            window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
-                                                  text_color="red")
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="red",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
+    @staticmethod
+    def launch_main_menu(user, window_inst):
+        """
+        Used to launch window if user successfully loaded/created/imported
+        Otherwise go backs to Load User Window
+        :param user: user object (if created/loaded/imported successfully) else False or None
+        :param window_inst: instance of form window
+        :return:
+        """
 
-    def launch_main_menu(self):
-        pass
+        if user:
+            window_inst.destroy()
+
+            main_menu_window = BaseLoggedInWindow(root, "Orses Wallet Client: MAIN MENU")
+            main_menu_window.protocol("WM_DELETE_WINDOW", lambda: (change_user(None),
+                                                                   change_wallet(None),
+                                                                   main_menu_window.destroy(),
+                                                                   root.deiconify()))
+
+        else:
+            root.deiconify()
+            window_inst.destroy()
 
 
 
