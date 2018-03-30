@@ -78,6 +78,9 @@ class UserAndWalletCommands:
             window_inst.insert_notification_label(text=valid_text, font_class=notif_label_font,
                                                   text_color="red")
 
+    def launch_main_menu(self):
+        pass
+
 
 
 class OrsesCommands:
@@ -193,6 +196,9 @@ class OrsesCommands:
 
 
 class BaseFormWindow(Toplevel):
+    """
+    class holding windows for forms
+    """
 
     x = 0
 
@@ -325,7 +331,8 @@ class BaseFormWindow(Toplevel):
                                         state=button_state)
         self.submit_button.grid(row=0, column=1, sticky=E)
 
-    def insert_notification_label(self, text, font_class, background_color="#20262b", text_color="white"):
+    def insert_notification_label(self, text, font_class, command_callback, background_color="#20262b",
+                                  text_color="white"):
 
         continue_button_width = int(self.form_window_width*0.055)
         x_axis = int((self.form_window_width/5) - (continue_button_width/5))
@@ -342,15 +349,51 @@ class BaseFormWindow(Toplevel):
 
 
         continue_button = ttk.Button(self.mainframe_lower, text="CONTINUE", width=continue_button_width,
-                                   command=lambda: (root.deiconify(), self.destroy()), style="cancel.TButton")
+                                   command=command_callback, style="cancel.TButton")
         continue_button.grid(row=10, sticky=(N,S))
         continue_button.grid_configure(padx=notif_padx, pady=notif_pady)
 
 
-
-
 class BaseLoggedInWindow(Toplevel):
-    pass
+    """
+    class holding window when logged into a user/wallet. Main Menu Window
+    """
+    def __init__(self, master, title, **kw):
+        super().__init__(master, **kw)
+        self.main_width = int(screen_width/1.25)
+        self.main_height = int(screen_heigth /1.25)
+        self.title(title)
+        self.geometry("{}x{}+{}+{}".format(self.main_width, self.main_height, int((screen_width / 2) - (self.main_width / 2)),
+                                           int((screen_heigth/2) - (self.main_height / 2))))
+
+        # Main frame
+        self.mainframe = ttk.Frame(self, width=self.main_width, height=self.main_width)
+        self.mainframe.grid(column=0,row=0,sticky=(N,S,E,W))
+        self.mainframe.grid_propagate(False)
+
+        # left frame
+        self.left_frame_width = int(self.main_width*0.20)
+        self.left_frame_height = self.main_height
+        self.left_frame = ttk.Frame(self.mainframe, width=self.left_frame_width, height=self.left_frame_height,
+                                    style="left.TFrame")
+        self.left_frame.grid(column=0, row=0, sticky=(W, N, S))
+        self.left_frame.grid_propagate(False)
+
+        # middle frame
+        self.middle_frame_width = int(self.main_width*0.60)
+        self.middle_frame_height = self.main_height
+        self.middle_frame = ttk.Frame(self.mainframe, width=self.middle_frame_width, height=self.middle_frame_height,
+                                 relief="sunken", style="middle.TFrame")
+        self.middle_frame.grid(column=1, row=0, sticky=(W,N,S,E))
+        self.middle_frame.grid_propagate(False)
+
+        # right frame
+        self.right_frame_width = int(self.main_width*0.20)
+        self.right_frame_height = self.main_height
+        self.right_frame = ttk.Frame(self.mainframe, width=self.right_frame_width, height=self.right_frame_height,
+                                     style="right.TFrame")
+        self.right_frame.grid(column=2, row=0, sticky=(E, N, S))
+        self.right_frame.grid_propagate(False)
 
 
 """  Beginning Of Program"""
@@ -367,6 +410,9 @@ Styles Declarations
 ttk_style = ttk.Style()
 ttk_style.configure("top.TFrame", background="#36444f", foreground="black")
 ttk_style.configure("lower.TFrame", background="#20262b", foreground="black")
+ttk_style.configure("left.TFrame", background="#303335")
+ttk_style.configure("middle.TFrame", background="#181e23", foreground="black")
+ttk_style.configure("right.TFrame", background="#101519")
 
 ttk_style.configure("login.TButton", background="#36444f", foreground="white", font=font.Font(family="Times", size=6))
 ttk_style.configure("cancel.TButton", background="#E1524A", foreground="black", font=font.Font(family="Times", size=12,
