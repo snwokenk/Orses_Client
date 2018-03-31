@@ -95,7 +95,7 @@ class UserAndWalletCommands:
             # Wrong Password
             for widgets in window_inst.mainframe_lower.grid_slaves():
                 widgets.grid_forget()
-            valid_text = "Wrong Password!"
+            valid_text = "Incorrect Password!"
             window_inst.insert_notification_label(
                 text=valid_text,
                 font_class=notif_label_font,
@@ -122,6 +122,8 @@ class UserAndWalletCommands:
         :param window_inst: instance of form window
         :return:
         """
+
+        print("I'm here")
 
         if user:
             window_inst.destroy()
@@ -213,6 +215,11 @@ class OrsesCommands:
 
         # Tells program destroy window and bring back up root (user login menu)
         load_user_window.protocol("WM_DELETE_WINDOW", lambda: (root.deiconify(), load_user_window.destroy()))
+        # load_user_window.submit_button.bind("<Return>", lambda: UserAndWalletCommands.load_user(
+        #     password=load_user_window.password_text.get(),
+        #     username=load_user_window.username_text.get(),
+        #     window_inst=load_user_window
+        # ))
 
 
     @staticmethod
@@ -383,8 +390,9 @@ class BaseFormWindow(Toplevel):
         submit_button_width = int(self.form_window_width*0.015)
         self.submit_button = ttk.Button(cancel_submit_frame, text=submit_text, width=submit_button_width,
                                    command=command_callback, style="submit.TButton",
-                                        state=button_state)
+                                        state=button_state, default="active")
         self.submit_button.grid(row=0, column=1, sticky=E)
+        self.bind('<Return>', lambda event: self.submit_button.invoke())
 
     def insert_notification_label(self, text, font_class, command_callback, background_color="#20262b",
                                   text_color="white"):
@@ -400,13 +408,13 @@ class BaseFormWindow(Toplevel):
                                 wraplength=int(self.form_window_width*0.65), justify="center")
         notif_label.grid(row=9, sticky=N)
         notif_label.grid_configure(padx=notif_padx, pady=notif_pady)
-        print(notif_label.winfo_width())
-
 
         continue_button = ttk.Button(self.mainframe_lower, text="CONTINUE", width=continue_button_width,
-                                   command=command_callback, style="cancel.TButton")
+                                   command=command_callback, style="cancel.TButton", default="active")
         continue_button.grid(row=10, sticky=(N,S))
         continue_button.grid_configure(padx=notif_padx, pady=notif_pady)
+
+        self.bind('<Return>', lambda event: continue_button.invoke())
 
 
 class BaseLoggedInWindow(Toplevel):
@@ -589,8 +597,6 @@ exit_button = ttk.Button(lower_frame, text="Exit Client", command=OrsesCommands.
 exit_button.grid(column=0, row=5,)
 exit_button.grid_configure(padx=button_padx)
 lower_frame.rowconfigure(5, weight=1)
-
-
 
 
 try:
