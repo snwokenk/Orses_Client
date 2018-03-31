@@ -266,6 +266,7 @@ class BaseFormWindow(Toplevel):
 
     def __init__(self, master, title, **kw):
         super().__init__(master, **kw)
+        self.resizable(False, False)
         self.form_window_width = int(screen_width/2)
         self.form_window_height = main_height
         self.x_position = int((screen_width / 2) - (self.form_window_width / 2))
@@ -423,8 +424,9 @@ class BaseLoggedInWindow(Toplevel):
     """
     def __init__(self, master, title, **kw):
         super().__init__(master, **kw)
-        self.main_width = int(screen_width/1.25)
-        self.main_height = int(screen_heigth /1.25)
+        self.resizable(False, False)
+        self.main_width = int(screen_width/1.1)
+        self.main_height = int(screen_heigth/1.1)
         self.title(title)
         self.geometry("{}x{}+{}+{}".format(self.main_width, self.main_height, int((screen_width / 2) - (self.main_width / 2)),
                                            int((screen_heigth/2) - (self.main_height / 2))))
@@ -516,6 +518,8 @@ Set Root Geometry: (size of main window and position it opens up
 root.geometry("{}x{}+{}+{}".format(login_frame_width, login_frame_height,
                                    int((screen_width / 2) - (login_frame_width / 2)),
                                    int((screen_heigth/2) - (login_frame_height / 2))))
+
+root.resizable(False, False)
 
 """
 Create A Main Frame which is called login_frame
