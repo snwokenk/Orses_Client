@@ -3,10 +3,10 @@ from tkinter import ttk
 from tkinter import font
 from PIL import Image, ImageTk
 
+# https://stackoverflow.com/questions/17635905/ttk-entry-background-colour/17639955
 # TODO: after user successfully loaded or created, make main menu window appear
 
 from Orses_User.User_CLI_Helper import UserCLI, User
-
 
 def change_user(new_val):
     global client_user
@@ -128,11 +128,14 @@ class UserAndWalletCommands:
         if user:
             window_inst.destroy()
 
-            main_menu_window = BaseLoggedInWindow(root, "Orses Wallet Client: MAIN MENU")
+            main_menu_window = BaseLoggedInWindow(root, "Orses Wallet Client: MAIN MENU", client_user=user)
             main_menu_window.insert_user_logout_quit_buttons()
             main_menu_window.insert_wallet_options()
             main_menu_window.insert_market_options()
             main_menu_window.insert_logo()
+
+            middle_frame_instance = MiddleFrameWidgets(baseloggedinwindowinstance=main_menu_window, user=user)
+
             main_menu_window.protocol("WM_DELETE_WINDOW", lambda: (change_user(None),
                                                                    change_wallet(None),
                                                                    main_menu_window.destroy(),
@@ -398,6 +401,7 @@ class BaseFormWindow(Toplevel):
                                         state=button_state, default="active")
         self.submit_button.grid(row=0, column=1, sticky=E)
         self.bind('<Return>', lambda event: self.submit_button.invoke())
+        self.bind('<KP_Enter>', lambda event: self.submit_button.invoke())
 
     def insert_notification_label(self, text, font_class, command_callback, background_color="#20262b",
                                   text_color="white"):
@@ -420,13 +424,14 @@ class BaseFormWindow(Toplevel):
         continue_button.grid_configure(padx=notif_padx, pady=notif_pady)
 
         self.bind('<Return>', lambda event: continue_button.invoke())
+        self.bind('<KP_Enter>', lambda event: continue_button.invoke())
 
 
 class BaseLoggedInWindow(Toplevel):
     """
     class holding window when logged into a user/wallet. Main Menu Window
     """
-    def __init__(self, master, title, **kw):
+    def __init__(self, master, title, client_user,**kw):
         super().__init__(master, **kw)
         self.resizable(False, False)
         self.main_width = int(screen_width/1.1)
@@ -453,7 +458,7 @@ class BaseLoggedInWindow(Toplevel):
         self.middle_frame_width = int(self.main_width*0.60)
         self.middle_frame_height = self.main_height
         self.middle_frame = ttk.Frame(self.mainframe, width=self.middle_frame_width, height=self.middle_frame_height,
-                                 relief="sunken", style="middle.TFrame")
+                                      style="middle.TFrame")
         self.middle_frame.grid(column=1, row=0, sticky=(W,N,S,E))
         self.middle_frame.grid_propagate(False)
 
@@ -464,6 +469,9 @@ class BaseLoggedInWindow(Toplevel):
                                      style="right.TFrame")
         self.right_frame.grid(column=2, row=0, sticky=(E, N, S))
         self.right_frame.grid_propagate(False)
+
+        # # variables_to_be_used_outside
+        self.client_id_str = StringVar(value="{}".format(client_user.client_id))
 
     # inside a frame at top of self.left_frame on row o
     def insert_user_logout_quit_buttons(self):
@@ -517,8 +525,25 @@ class BaseLoggedInWindow(Toplevel):
         # use root.update to update width value of widgets after root.mainloop()
         root.update()
         wallet_menu_label_padx= int((left_frame_top_mid.winfo_width() - wallet_menu_label.winfo_width())/2)
-        print(wallet_menu_label.winfo_width(), left_frame_top_mid.winfo_width())
+        print(wallet_menu_label.winfo_width(), left_frame_top_mid.winfo_width(), left_frame_top_mid_width)
         wallet_menu_label.grid_configure(padx=wallet_menu_label_padx)
+
+        # separator
+        sep1 = ttk.Separator(left_frame_top_mid, orient=HORIZONTAL)
+        sep1.grid(row=1, column=0, stick=(E, W))
+
+        # buttons
+        link_btn_width = int(left_frame_top_mid_width/10.05)  # ration is ~ 1 to 7.05
+
+        self.insert_btn_link(left_frame_top_mid, row=2, column=0, width=link_btn_width,
+                             command=lambda: print("Pushed"), text="Create A Wallet",
+                             master_height=left_frame_top__mid_height)
+        self.insert_btn_link(left_frame_top_mid, row=3, column=0, width=link_btn_width,
+                             command=lambda: print("Pushed"), text="Load A Wallet",
+                             master_height=left_frame_top__mid_height)
+        self.insert_btn_link(left_frame_top_mid, row=4, column=0, width=link_btn_width,
+                             command=lambda: print("Pushed"), text="List Owned Wallets",
+                             master_height=left_frame_top__mid_height)
 
     def insert_market_options(self):
         left_frame_lower_mid_width = self.left_frame_width
@@ -549,10 +574,54 @@ class BaseLoggedInWindow(Toplevel):
         root.update()
         logo_label_padx= int((self.left_frame.winfo_width() - logo_label.winfo_width())/2)
         logo_label_padx = int(self.left_frame.winfo_width()/6) if logo_label_padx == 0 else logo_label_padx
-        print(self.left_frame.winfo_width(), logo_label.winfo_width())
-        print(logo_label_padx)
         logo_label.grid_configure(padx=logo_label_padx)
 
+    def insert_btn_link(self, master, row, column, width, text, command, master_height):
+        link_button = ttk.Button(master, width=width, text=text, command=command, style="link.TButton")
+        link_button.grid(row=row, column=column, sticky=(E, W))
+        command= lambda: (root.update(),print(link_button.winfo_width()),link_button.focus())
+        link_button["command"] = command
+
+        link_button.grid_configure(pady=(int(master_height*.10), 0))
+
+class MiddleFrameWidgets:
+    def __init__(self, baseloggedinwindowinstance, user):
+        assert isinstance(baseloggedinwindowinstance, BaseLoggedInWindow)
+        self.client_user = user
+        self.base_window = baseloggedinwindowinstance
+        self.middle_frame = self.base_window.middle_frame
+        self.middle_frame_height = self.base_window.middle_frame_height
+        self.middle_frame_width = self.base_window.middle_frame_width
+        self.notebookwidget = ttk.Notebook(self.middle_frame, style="middle.TNotebook")
+        self.notebookwidget.grid(row=0)
+        self.welcome_frame = ttk.Frame(self.notebookwidget, style="middle.TFrame", width=self.middle_frame_width,
+                                       height=self.middle_frame_height)
+        self.welcome_frame.grid_propagate(False)
+        self.notebookwidget.add(self.welcome_frame, text="Welcome")
+        self.client_id_str = StringVar(value="{}".format(self.client_user.client_id))
+
+        self.create_welcome_frame()
+
+    def create_welcome_frame(self):
+
+        # add a welcome label text
+
+        welcome_label = ttk.Label(self.welcome_frame, text="Welcome To The\nOrses Network Wallet Client",
+                                  justify="center", style="welcome.TLabel", font=welcome_label_font)
+        welcome_label.grid(row=0, column=0, sticky=(N,S,E,W))
+        root.update()
+
+        welcome_label_padx = int((self.welcome_frame.winfo_width() - welcome_label.winfo_width())/2)
+        welcome_label_pady = int(self.welcome_frame.winfo_height()*.10)
+        welcome_label.grid_configure(padx=welcome_label_padx, pady=welcome_label_pady)
+
+        # add a read only entry
+        print(self.client_id_str.get())
+        client_id_entry = ttk.Entry(self.welcome_frame, textvariable=self.base_window.client_id_str,
+                                    width=len(self.base_window.client_id_str.get()),
+                                    exportselection=1, style="welcome.TEntry",
+                                    font=font.Font(family="Times", size=24, weight="bold",))
+        client_id_entry.grid(row=1, column=0)
 
 
 """  Beginning Of Program"""
@@ -572,15 +641,35 @@ ttk_style.configure("lower.TFrame", background="#20262b", foreground="black")
 ttk_style.configure("left.TFrame", background="#303335")
 ttk_style.configure("sidelabelmenu.TFrame", background="#242728")
 ttk_style.configure("middle.TFrame", background="#181e23", foreground="black")
+ttk_style.configure("middle1.TFrame", background="white", foreground="black")
 ttk_style.configure("right.TFrame", background="#101519")
 
 ttk_style.configure("login.TButton", background="#36444f", foreground="white", font=font.Font(family="Times", size=6))
 ttk_style.configure("cancel.TButton", background="#E1524A", foreground="black", font=font.Font(family="Times", size=12,
                                                                                                weight="bold"))
-ttk_style.configure("logout.TButton", background="#3f5ac6", foreground="black", font=font.Font(family="Times", size=12,
-                                                                                               weight="bold"))
+ttk_style.configure("logout.TButton", background="#3f5ac6", foreground="black",
+                    font=font.Font(family="Times", size=12, weight="bold"))
 ttk_style.configure("submit.TButton", background="#43A26E", foreground="black", font=font.Font(family="Times", size=12,
                                                                                                weight="bold"))
+
+ttk_style.configure("link.TButton", background="#303335", foreground="white",
+                    font=font.Font(family="Times", size=14, weight="bold"), relief="flat")
+ttk_style.map(
+    "link.TButton",
+    background=[
+        ('active', '#181e23'),
+        ('focus', '#181e23')
+    ]
+
+)
+ttk_style.configure("middle.TNotebook", background='#181e23', foreground="white",
+                    font=font.Font(family="Times", size=120, weight="bold"))
+ttk_style.configure("middle.TNotebook.Tab", background='white', foreground="black",
+                    font=font.Font(family="Times", size=120, weight="bold"))
+ttk_style.configure("welcome.TLabel", background="#181e23", foreground="white")
+ttk_style.configure("welcome.TEntry", background="#181e23", foreground="white", fieldbackground="#181e23",
+                    font=font.Font(family="Times", size=32, weight="bold",))
+
 
 
 """
@@ -592,6 +681,8 @@ print(font.families())
 form_label_font = font.Font(family="fixed", size=16, weight="normal", underline=True)
 notif_label_font = font.Font(family="fixed", size=16, weight="normal")
 menu_header_label_font = font.Font(family="song ti", size=24, weight="normal")
+welcome_label_font = font.Font(family="Times", size=32, weight="bold",)
+
 
 
 """
