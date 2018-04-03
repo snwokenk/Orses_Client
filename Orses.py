@@ -129,6 +129,10 @@ class UserAndWalletCommands:
             window_inst.destroy()
 
             main_menu_window = BaseLoggedInWindow(root, "Orses Wallet Client: MAIN MENU")
+            main_menu_window.insert_user_logout_quit_buttons()
+            main_menu_window.insert_wallet_options()
+            main_menu_window.insert_market_options()
+            main_menu_window.insert_logo()
             main_menu_window.protocol("WM_DELETE_WINDOW", lambda: (change_user(None),
                                                                    change_wallet(None),
                                                                    main_menu_window.destroy(),
@@ -443,6 +447,7 @@ class BaseLoggedInWindow(Toplevel):
                                     style="left.TFrame")
         self.left_frame.grid(column=0, row=0, sticky=(W, N, S))
         self.left_frame.grid_propagate(False)
+        self.left_frame_width_btn = int(self.left_frame_width*0.045)
 
         # middle frame
         self.middle_frame_width = int(self.main_width*0.60)
@@ -460,6 +465,95 @@ class BaseLoggedInWindow(Toplevel):
         self.right_frame.grid(column=2, row=0, sticky=(E, N, S))
         self.right_frame.grid_propagate(False)
 
+    # inside a frame at top of self.left_frame on row o
+    def insert_user_logout_quit_buttons(self):
+        left_frame_top_width = self.left_frame_width
+        left_frame_top_height = int(self.left_frame_height*0.10)
+
+        left_frame_top = ttk.Frame(self.left_frame, style="left.TFrame", width=left_frame_top_width,
+                                   height=left_frame_top_height)
+        left_frame_top.grid(row=0, column=0)
+        left_frame_top.grid_propagate(False)
+
+        log_out_button = ttk.Button(
+            left_frame_top,
+            text="Log Out",
+            width=self.left_frame_width_btn,
+            command=lambda: (change_user(None), change_wallet(None), root.deiconify(), self.destroy()),
+            style="logout.TButton"
+        )
+        log_out_button.grid(row=0, column=0, sticky=W)
+        log_out_button.grid_configure(padx=((int(self.left_frame_width)*.01), 0))
+
+        quit_button = ttk.Button(
+            left_frame_top,
+            text="Exit Client",
+            width=self.left_frame_width_btn,
+            command=root.destroy,
+            style="cancel.TButton"
+        )
+        quit_button.grid(row=0, column=1, stick=E)
+        quit_button.grid_configure(padx=((int(self.left_frame_width)*.015), 0))
+
+    # inside frame at the second top of left frame row 1
+    def insert_wallet_options(self):
+
+        left_frame_top_mid_width = self.left_frame_width
+        left_frame_top__mid_height = int(self.left_frame_height*0.40)
+
+        left_frame_top_mid = ttk.Frame(self.left_frame, style="left.TFrame", width=left_frame_top_mid_width,
+                                       height=left_frame_top__mid_height)
+        left_frame_top_mid.grid(row=1, column=0)
+        left_frame_top_mid.grid_propagate(False)
+
+        # insert label "Wallet Menu" and separator row 0, row 1
+        wallet_frame = ttk.Frame(left_frame_top_mid, width=left_frame_top_mid_width, style="sidelabelmenu.TFrame")
+        # wallet_frame.grid_propagate(False)
+        wallet_frame.grid(row=0, sticky=(W,E,S,N))
+
+        wallet_menu_label = ttk.Label(wallet_frame, text="Wallet", font=menu_header_label_font,
+                                      background="#242728", foreground="white")
+        wallet_menu_label.grid(row=0, sticky=(N,S,E,W))
+        # use root.update to update width value of widgets after root.mainloop()
+        root.update()
+        wallet_menu_label_padx= int((left_frame_top_mid.winfo_width() - wallet_menu_label.winfo_width())/2)
+        print(wallet_menu_label.winfo_width(), left_frame_top_mid.winfo_width())
+        wallet_menu_label.grid_configure(padx=wallet_menu_label_padx)
+
+    def insert_market_options(self):
+        left_frame_lower_mid_width = self.left_frame_width
+        left_frame_lower__mid_height = int(self.left_frame_height*0.35)
+
+        left_frame_lower_mid = ttk.Frame(self.left_frame, style="left.TFrame", width=left_frame_lower_mid_width,
+                                         height=left_frame_lower__mid_height)
+        left_frame_lower_mid.grid(row=2, column=0)
+        left_frame_lower_mid.grid_propagate(False)
+
+        market_frame = ttk.Frame(left_frame_lower_mid, width=left_frame_lower_mid_width, style="sidelabelmenu.TFrame")
+        # market_frame.grid_propagate(False)
+        market_frame.grid(row=0, sticky=(W,E,S,N))
+
+        market_menu_label = ttk.Label(market_frame, text="Marketplace", font=menu_header_label_font,
+                                      background="#242728", foreground="white")
+        market_menu_label.grid(row=0, sticky=(N,S,E,W))
+        # use root.update to update width value of widgets after root.mainloop()
+        root.update()
+        market_menu_label_padx= int((left_frame_lower_mid.winfo_width() - market_menu_label.winfo_width())/2)
+        market_menu_label.grid_configure(padx=market_menu_label_padx)
+
+    def insert_logo(self):
+
+        logo_label = ttk.Label(self.left_frame, image=logo_image, background="#303335", foreground="white",
+                                   font=welcome_font)
+        logo_label.grid(row=3, column=0, sticky=(N,S,E,W))
+        root.update()
+        logo_label_padx= int((self.left_frame.winfo_width() - logo_label.winfo_width())/2)
+        logo_label_padx = int(self.left_frame.winfo_width()/6) if logo_label_padx == 0 else logo_label_padx
+        print(self.left_frame.winfo_width(), logo_label.winfo_width())
+        print(logo_label_padx)
+        logo_label.grid_configure(padx=logo_label_padx)
+
+
 
 """  Beginning Of Program"""
 
@@ -476,11 +570,14 @@ ttk_style = ttk.Style()
 ttk_style.configure("top.TFrame", background="#36444f", foreground="black")
 ttk_style.configure("lower.TFrame", background="#20262b", foreground="black")
 ttk_style.configure("left.TFrame", background="#303335")
+ttk_style.configure("sidelabelmenu.TFrame", background="#242728")
 ttk_style.configure("middle.TFrame", background="#181e23", foreground="black")
 ttk_style.configure("right.TFrame", background="#101519")
 
 ttk_style.configure("login.TButton", background="#36444f", foreground="white", font=font.Font(family="Times", size=6))
 ttk_style.configure("cancel.TButton", background="#E1524A", foreground="black", font=font.Font(family="Times", size=12,
+                                                                                               weight="bold"))
+ttk_style.configure("logout.TButton", background="#3f5ac6", foreground="black", font=font.Font(family="Times", size=12,
                                                                                                weight="bold"))
 ttk_style.configure("submit.TButton", background="#43A26E", foreground="black", font=font.Font(family="Times", size=12,
                                                                                                weight="bold"))
@@ -494,6 +591,7 @@ print(font.families())
 
 form_label_font = font.Font(family="fixed", size=16, weight="normal", underline=True)
 notif_label_font = font.Font(family="fixed", size=16, weight="normal")
+menu_header_label_font = font.Font(family="song ti", size=24, weight="normal")
 
 
 """
@@ -519,7 +617,8 @@ root.geometry("{}x{}+{}+{}".format(login_frame_width, login_frame_height,
                                    int((screen_width / 2) - (login_frame_width / 2)),
                                    int((screen_heigth/2) - (login_frame_height / 2))))
 
-root.resizable(False, False)
+
+
 
 """
 Create A Main Frame which is called login_frame
@@ -602,9 +701,9 @@ exit_button.grid(column=0, row=5,)
 exit_button.grid_configure(padx=button_padx)
 lower_frame.rowconfigure(5, weight=1)
 
-
 try:
-
+    root.resizable(False, False)
+    root.iconphoto(True, logo_image)
     root.mainloop()
 except SystemExit:
     print("here")
