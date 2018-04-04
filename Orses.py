@@ -490,8 +490,8 @@ class BaseLoggedInWindow(Toplevel):
             command=lambda: (change_user(None), change_wallet(None), root.deiconify(), self.destroy()),
             style="logout.TButton"
         )
-        log_out_button.grid(row=0, column=0, sticky=W)
-        log_out_button.grid_configure(padx=((int(self.left_frame_width)*.01), 0))
+        log_out_button.grid(row=0, column=1, sticky=E)
+        log_out_button.grid_configure(padx=((int(self.left_frame_width)*.015), 0))
 
         quit_button = ttk.Button(
             left_frame_top,
@@ -500,8 +500,9 @@ class BaseLoggedInWindow(Toplevel):
             command=root.destroy,
             style="cancel.TButton"
         )
-        quit_button.grid(row=0, column=1, stick=E)
+        quit_button.grid(row=0, column=0, stick=W)
         quit_button.grid_configure(padx=((int(self.left_frame_width)*.015), 0))
+        quit_button.grid_configure(padx=((int(self.left_frame_width)*.01), 0))
 
     # inside frame at the second top of left frame row 1
     def insert_wallet_options(self):
@@ -606,8 +607,9 @@ class MiddleFrameWidgets:
 
         # add a welcome label text
 
-        welcome_label = ttk.Label(self.welcome_frame, text="Welcome To The\nOrses Network Wallet Client",
+        welcome_label = ttk.Label(self.welcome_frame, text="Welcome To The\nOrses Network Wallet Client\n\nClient ID: ",
                                   justify="center", style="welcome.TLabel", font=welcome_label_font)
+
         welcome_label.grid(row=0, column=0, sticky=(N,S,E,W))
         root.update()
 
@@ -621,7 +623,7 @@ class MiddleFrameWidgets:
                                     width=len(self.base_window.client_id_str.get()),
                                     exportselection=1, style="welcome.TEntry",
                                     font=font.Font(family="Times", size=24, weight="bold",))
-        client_id_entry.grid(row=1, column=0)
+        client_id_entry.grid(row=2, column=0)
 
 
 """  Beginning Of Program"""
