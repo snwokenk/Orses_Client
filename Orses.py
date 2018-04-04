@@ -4,9 +4,10 @@ from tkinter import font
 from PIL import Image, ImageTk
 
 # https://stackoverflow.com/questions/17635905/ttk-entry-background-colour/17639955
-# TODO: after user successfully loaded or created, make main menu window appear
+# TODO: after user successfully loaded or created, make main menu window appear DONE
 
 from Orses_User.User_CLI_Helper import UserCLI, User
+
 
 def change_user(new_val):
     global client_user
@@ -16,6 +17,13 @@ def change_user(new_val):
 def change_wallet(new_val):
     global client_wallet
     client_wallet = new_val
+
+
+def get_padx(master, child):
+
+    root.update()
+    return int((master.winfo_width() - child.winfo_width())/2)
+
 
 # these variables will hold a successfully loaded user object and wallet object
 client_user = None
@@ -477,6 +485,9 @@ class BaseLoggedInWindow(Toplevel):
 
         # wallet creation frame None until Create a Wallet button pressed
         self.wallet_creation_frame = None
+        self.nickname_text = StringVar()
+        self.password_text = StringVar()
+        self.password1_text = StringVar()
 
     # inside a frame at top of self.left_frame on row o
     def insert_user_logout_quit_buttons(self):
@@ -625,8 +636,10 @@ class BaseLoggedInWindow(Toplevel):
 
     def add_wallet_creation_frame(self):
 
+        # checks to see if self.wallet_creation_frame is already a child of self.notebookwidget
         if self.wallet_creation_frame in self.notebookwidget.winfo_children():
             self.notebookwidget.select(self.wallet_creation_frame)
+            print("Already Created")
             return None
 
         self.wallet_creation_frame = ttk.Frame(
@@ -636,11 +649,67 @@ class BaseLoggedInWindow(Toplevel):
             height=self.middle_frame_height
         )
         self.welcome_frame.grid_propagate(False)
+
         self.notebookwidget.add(self.wallet_creation_frame, text="Create A Wallet")
         self.notebookwidget.select(self.wallet_creation_frame)
-        # for i in self.notebookwidget.winfo_children():
-        #     print(i, type(i))
-        #     print(i == self.wallet_creation_frame)
+
+        # insert header title "Create A Wallet"
+        header_label = ttk.Label(self.wallet_creation_frame, text="Create A Wallet", background="#181e23",
+                                 foreground="white", font=welcome_font)
+        header_label.grid(row=0)
+        root.update()
+        header_label_padx = int((self.wallet_creation_frame.winfo_width() - header_label.winfo_width())/2)
+        header_label_pady = (int(self.wallet_creation_frame.winfo_height() * 0.1),
+                             int(self.wallet_creation_frame.winfo_height() * 0.05))
+        header_label.grid_configure(padx=header_label_padx, pady=header_label_pady)
+
+        # insert wallet nickname label and Entry
+        nickname_label = ttk.Label(self.wallet_creation_frame, text="Choose A Wallet NickName:", background="#181e23",
+                                   foreground="white", font=form_label_font)
+        nickname_label.grid(row=1, sticky=N)
+        nickname_label.grid_configure(padx=get_padx(self.wallet_creation_frame, nickname_label))
+
+        nickname_entry =ttk.Entry(self.wallet_creation_frame, textvariable=self.nickname_text, width=40, takefocus=True)
+        nickname_entry.grid(row=2, sticky=S)
+        nickname_entry.grid_configure(padx=get_padx(self.wallet_creation_frame, nickname_entry),
+                                      pady=(0,int(self.wallet_creation_frame.winfo_height() * 0.05)))
+        nickname_entry.focus()
+
+        # insert wallet password label AND entry
+        password_label = ttk.Label(self.wallet_creation_frame, text="Choose A Password:", background="#181e23",
+                                   foreground="white", font=form_label_font)
+        password_label.grid(row=3, sticky=N)
+        password_label.grid_configure(padx=get_padx(self.wallet_creation_frame, password_label))
+
+        password_entry =ttk.Entry(self.wallet_creation_frame, textvariable=self.password_text, width=40,
+                                  takefocus=False, show="*")
+        password_entry.grid(row=4, sticky=S)
+        password_entry.grid_configure(padx=get_padx(self.wallet_creation_frame, password_entry),
+                                      pady=(0,int(self.wallet_creation_frame.winfo_height() * 0.05)))
+
+
+        # insert re_entry wallet password label AND entry
+        password1_label = ttk.Label(self.wallet_creation_frame, text="Re_Enter Password:", background="#181e23",
+                                   foreground="white", font=form_label_font)
+        password1_label.grid(row=5, sticky=N)
+        password1_label.grid_configure(padx=get_padx(self.wallet_creation_frame, password1_label))
+
+        password1_entry =ttk.Entry(
+            self.wallet_creation_frame,
+            textvariable=self.password_text,
+            width=40,
+            takefocus=False,
+            show="*",
+            validatecommand=lambda: OrsesCommands.enable_submit(password=self.password_text.get(),
+                                                                password1=self.password1_text.get(),
+                                                                username=self.nickname_text,
+                                                                button_instance=submit_button))
+        password1_entry.grid(row=6, sticky=S)
+        password1_entry.grid_configure(padx=get_padx(self.wallet_creation_frame, password1_entry),
+                                      pady=(0,int(self.wallet_creation_frame.winfo_height() * 0.05)))
+
+
+
 
 
 
