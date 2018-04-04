@@ -542,7 +542,7 @@ class BaseLoggedInWindow(Toplevel):
         link_btn_width = int(left_frame_top_mid_width/10.05)  # ration is ~ 1 to 7.05
 
         self.insert_btn_link(left_frame_top_mid, row=2, column=0, width=link_btn_width,
-                             command=lambda: self.add_welcome_frame_to_notebook_widget(), text="Create A Wallet",
+                             command=self.add_wallet_creation_frame, text="Create A Wallet",
                              master_height=left_frame_top__mid_height)
         self.insert_btn_link(left_frame_top_mid, row=3, column=0, width=link_btn_width,
                              command=lambda: print("Pushed"), text="Load A Wallet",
@@ -583,7 +583,8 @@ class BaseLoggedInWindow(Toplevel):
         logo_label.grid_configure(padx=logo_label_padx)
 
     def insert_btn_link(self, master, row, column, width, text, command, master_height):
-        link_button = ttk.Button(master, width=width, text=text, command=command, style="link.TButton")
+        link_button = ttk.Button(master, width=width, text=text, command=lambda: (link_button.focus(), command()),
+                                 style="link.TButton")
         link_button.grid(row=row, column=column, sticky=(E, W))
 
 
@@ -624,6 +625,10 @@ class BaseLoggedInWindow(Toplevel):
 
     def add_wallet_creation_frame(self):
 
+        if self.wallet_creation_frame in self.notebookwidget.winfo_children():
+            self.notebookwidget.select(self.wallet_creation_frame)
+            return None
+
         self.wallet_creation_frame = ttk.Frame(
             self.notebookwidget,
             style="middle.TFrame",
@@ -631,7 +636,11 @@ class BaseLoggedInWindow(Toplevel):
             height=self.middle_frame_height
         )
         self.welcome_frame.grid_propagate(False)
-        self.notebookwidget.add(self.welcome_frame, text="Create A Wallet")
+        self.notebookwidget.add(self.wallet_creation_frame, text="Create A Wallet")
+        self.notebookwidget.select(self.wallet_creation_frame)
+        # for i in self.notebookwidget.winfo_children():
+        #     print(i, type(i))
+        #     print(i == self.wallet_creation_frame)
 
 
 
@@ -809,7 +818,7 @@ try:
     root.resizable(False, False)
     root.iconphoto(True, logo_image)
     root.mainloop()
-except SystemExit:
+except (SystemExit, KeyboardInterrupt):
     print("here")
     root.destroy()
 
