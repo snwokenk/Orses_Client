@@ -134,17 +134,14 @@ class UserAndWalletCommands:
             main_menu_window.insert_market_options()
             main_menu_window.insert_logo()
 
-            middle_frame_instance = MiddleFrameWidgets(baseloggedinwindowinstance=main_menu_window, user=user)
 
             main_menu_window.protocol("WM_DELETE_WINDOW", lambda: (change_user(None),
                                                                    change_wallet(None),
                                                                    main_menu_window.destroy(),
                                                                    root.deiconify()))
-
         else:
             root.deiconify()
             window_inst.destroy()
-
 
 
 class OrsesCommands:
@@ -473,6 +470,14 @@ class BaseLoggedInWindow(Toplevel):
         # # variables_to_be_used_outside
         self.client_id_str = StringVar(value="{}".format(client_user.client_id))
 
+        # middle frame widgets insertion
+        self.insert_notebook_widget()
+        self.add_welcome_frame_to_notebook_widget()
+        self.add_welcome_widgets_to_welcome_frame()
+
+        # wallet creation frame None until Create a Wallet button pressed
+        self.wallet_creation_frame = None
+
     # inside a frame at top of self.left_frame on row o
     def insert_user_logout_quit_buttons(self):
         left_frame_top_width = self.left_frame_width
@@ -537,7 +542,7 @@ class BaseLoggedInWindow(Toplevel):
         link_btn_width = int(left_frame_top_mid_width/10.05)  # ration is ~ 1 to 7.05
 
         self.insert_btn_link(left_frame_top_mid, row=2, column=0, width=link_btn_width,
-                             command=lambda: print("Pushed"), text="Create A Wallet",
+                             command=lambda: self.add_welcome_frame_to_notebook_widget(), text="Create A Wallet",
                              master_height=left_frame_top__mid_height)
         self.insert_btn_link(left_frame_top_mid, row=3, column=0, width=link_btn_width,
                              command=lambda: print("Pushed"), text="Load A Wallet",
@@ -580,31 +585,23 @@ class BaseLoggedInWindow(Toplevel):
     def insert_btn_link(self, master, row, column, width, text, command, master_height):
         link_button = ttk.Button(master, width=width, text=text, command=command, style="link.TButton")
         link_button.grid(row=row, column=column, sticky=(E, W))
-        command= lambda: (root.update(),print(link_button.winfo_width()),link_button.focus())
-        link_button["command"] = command
+
 
         link_button.grid_configure(pady=(int(master_height*.10), 0))
 
-class MiddleFrameWidgets:
-    def __init__(self, baseloggedinwindowinstance, user):
-        assert isinstance(baseloggedinwindowinstance, BaseLoggedInWindow)
-        self.client_user = user
-        self.base_window = baseloggedinwindowinstance
-        self.middle_frame = self.base_window.middle_frame
-        self.middle_frame_height = self.base_window.middle_frame_height
-        self.middle_frame_width = self.base_window.middle_frame_width
+    def insert_notebook_widget(self):
+
         self.notebookwidget = ttk.Notebook(self.middle_frame, style="middle.TNotebook")
         self.notebookwidget.grid(row=0)
+
+    def add_welcome_frame_to_notebook_widget(self):
+
         self.welcome_frame = ttk.Frame(self.notebookwidget, style="middle.TFrame", width=self.middle_frame_width,
                                        height=self.middle_frame_height)
         self.welcome_frame.grid_propagate(False)
         self.notebookwidget.add(self.welcome_frame, text="Welcome")
-        self.client_id_str = StringVar(value="{}".format(self.client_user.client_id))
 
-        self.create_welcome_frame()
-
-    def create_welcome_frame(self):
-
+    def add_welcome_widgets_to_welcome_frame(self):
         # add a welcome label text
 
         welcome_label = ttk.Label(self.welcome_frame, text="Welcome To The\nOrses Network Wallet Client\n\nClient ID: ",
@@ -619,11 +616,25 @@ class MiddleFrameWidgets:
 
         # add a read only entry
         print(self.client_id_str.get())
-        client_id_entry = ttk.Entry(self.welcome_frame, textvariable=self.base_window.client_id_str,
-                                    width=len(self.base_window.client_id_str.get()),
+        client_id_entry = ttk.Entry(self.welcome_frame, textvariable=self.client_id_str,
+                                    width=len(self.client_id_str.get()),
                                     exportselection=1, style="welcome.TEntry",
                                     font=font.Font(family="Times", size=24, weight="bold",))
         client_id_entry.grid(row=2, column=0)
+
+    def add_wallet_creation_frame(self):
+
+        self.wallet_creation_frame = ttk.Frame(
+            self.notebookwidget,
+            style="middle.TFrame",
+            width=self.middle_frame_width,
+            height=self.middle_frame_height
+        )
+        self.welcome_frame.grid_propagate(False)
+        self.notebookwidget.add(self.welcome_frame, text="Create A Wallet")
+
+
+
 
 
 """  Beginning Of Program"""
