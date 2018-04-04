@@ -675,6 +675,17 @@ class BaseLoggedInWindow(Toplevel):
                                       pady=(0,int(self.wallet_creation_frame.winfo_height() * 0.05)))
         nickname_entry.focus()
 
+        # insert cancel and submit buttons first but must be the last row
+        cancel_submit_frame = ttk.Frame(self.wallet_creation_frame, style="middle.TFrame",
+                                        width=int(self.wallet_creation_frame.winfo_width()*0.39), height=27, relief="sunken")
+        cancel_submit_frame.grid(row=7)
+        cancel_submit_frame.grid_propagate(False)
+        root.update()  # call this to update event loop of cancel_submit_frame new width and height
+        cancel_submit_frame.grid_configure(
+            padx=int((self.wallet_creation_frame.winfo_width() - cancel_submit_frame.winfo_width())/2),
+            pady=int(self.wallet_creation_frame.winfo_height()*.025)
+        )
+
         # insert wallet password label AND entry
         password_label = ttk.Label(self.wallet_creation_frame, text="Choose A Password:", background="#181e23",
                                    foreground="white", font=form_label_font)
