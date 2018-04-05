@@ -490,6 +490,11 @@ class BaseLoggedInWindow(Toplevel):
         self.password_text = StringVar()
         self.password1_text = StringVar()
 
+        # wallet load frame from None until Load A Wallet button pressed
+        self.load_wallet_frame = None
+        self.load_nickname_text = StringVar()
+        self.load_password_text = StringVar()
+
     # inside a frame at top of self.left_frame on row o
     def insert_user_logout_quit_buttons(self):
         left_frame_top_width = self.left_frame_width
@@ -557,7 +562,7 @@ class BaseLoggedInWindow(Toplevel):
                              command=self.add_wallet_creation_frame, text="Create A Wallet",
                              master_height=left_frame_top__mid_height)
         self.insert_btn_link(left_frame_top_mid, row=3, column=0, width=link_btn_width,
-                             command=lambda: print("Pushed"), text="Load A Wallet",
+                             command=self.add_load_wallet_frame, text="Load A Wallet",
                              master_height=left_frame_top__mid_height)
         self.insert_btn_link(left_frame_top_mid, row=4, column=0, width=link_btn_width,
                              command=lambda: print("Pushed"), text="List Owned Wallets",
@@ -650,7 +655,7 @@ class BaseLoggedInWindow(Toplevel):
             width=self.middle_frame_width,
             height=self.middle_frame_height
         )
-        self.welcome_frame.grid_propagate(False)
+        self.wallet_creation_frame.grid_propagate(False)
 
         self.notebookwidget.add(self.wallet_creation_frame, text="Create A Wallet")
         self.notebookwidget.select(self.wallet_creation_frame)
@@ -741,6 +746,86 @@ class BaseLoggedInWindow(Toplevel):
         password1_entry.grid(row=6, sticky=S)
         password1_entry.grid_configure(padx=get_padx(self.wallet_creation_frame, password1_entry),
                                        pady=(0,int(self.wallet_creation_frame.winfo_height() * 0.05)))
+
+    def add_load_wallet_frame(self):
+        if self.load_wallet_frame in self.notebookwidget.winfo_children():
+            self.notebookwidget.select(self.load_wallet_frame)
+            print("Already Created")
+            return None
+
+        self.load_wallet_frame = ttk.Frame(
+            self.notebookwidget,
+            style="middle.TFrame",
+            width=self.middle_frame_width,
+            height=self.middle_frame_height
+        )
+
+        self.load_wallet_frame.grid_propagate(False)
+        self.notebookwidget.add(self.load_wallet_frame, text="Load A Wallet")
+        self.notebookwidget.select(self.load_wallet_frame)
+
+        # insert header title "Create A Wallet"
+        header_label = ttk.Label(self.load_wallet_frame, text="Load A Wallet", background="#181e23",
+                                 foreground="white", font=welcome_font)
+        header_label.grid(row=0)
+        root.update()
+        header_label_padx = int((self.load_wallet_frame.winfo_width() - header_label.winfo_width())/2)
+        header_label_pady = (int(self.load_wallet_frame.winfo_height() * 0.1),
+                             int(self.load_wallet_frame.winfo_height() * 0.05))
+        header_label.grid_configure(padx=header_label_padx, pady=header_label_pady)
+
+        # insert wallet nickname label and Entry
+        nickname_label = ttk.Label(self.load_wallet_frame, text="Wallet NickName:", background="#181e23",
+                                   foreground="white", font=form_label_font)
+        nickname_label.grid(row=1, sticky=N)
+        nickname_label.grid_configure(padx=get_padx(self.load_wallet_frame, nickname_label))
+
+        nickname_entry =ttk.Entry(self.load_wallet_frame, textvariable=self.load_nickname_text, width=40, takefocus=True)
+        nickname_entry.grid(row=2, sticky=S)
+        nickname_entry.grid_configure(padx=get_padx(self.load_wallet_frame, nickname_entry),
+                                      pady=(0,int(self.load_wallet_frame.winfo_height() * 0.05)))
+        nickname_entry.focus()
+
+        # insert wallet password label AND entry
+        password_label = ttk.Label(self.load_wallet_frame, text="Choose A Password:", background="#181e23",
+                                   foreground="white", font=form_label_font)
+        password_label.grid(row=3, sticky=N)
+        password_label.grid_configure(padx=get_padx(self.load_wallet_frame, password_label))
+
+        password_entry =ttk.Entry(self.load_wallet_frame, textvariable=self.load_password_text, width=40,
+                                  takefocus=False, show="*")
+        password_entry.grid(row=4, sticky=S)
+        password_entry.grid_configure(padx=get_padx(self.load_wallet_frame, password_entry),
+                                      pady=(0,int(self.load_wallet_frame.winfo_height() * 0.05)))
+
+        # insert cancel and submit buttons first but must be the last row
+        cancel_submit_frame = ttk.Frame(self.load_wallet_frame, style="middle.TFrame",
+                                        width=int(self.load_wallet_frame.winfo_width()*0.39), height=27, relief="sunken")
+        cancel_submit_frame.grid(row=5)
+        cancel_submit_frame.grid_propagate(False)
+        root.update()  # call this to update event loop of cancel_submit_frame new width and height
+        cancel_submit_frame.grid_configure(
+            padx=int((self.load_wallet_frame.winfo_width() - cancel_submit_frame.winfo_width())/2),
+            pady=int(self.load_wallet_frame.winfo_height()*.025)
+        )
+        cancel_submit_frame.columnconfigure(0, weight=1)
+        cancel_submit_frame.columnconfigure(1, weight=1)
+
+        cancel_button_width = int(self.load_wallet_frame.winfo_width()*0.015)
+        cancel_button = ttk.Button(cancel_submit_frame, text="CANCEL", width=cancel_button_width,
+                                   command=lambda: (self.load_wallet_frame.destroy(), self.load_nickname_text.set(""),
+                                                    self.load_password_text.set("")),
+                                   style="cancel.TButton")
+        cancel_button.grid(row=0, column=0, sticky=W)
+
+        submit_button = ttk.Button(cancel_submit_frame, text="LOAD", width=cancel_button_width,
+                                   command=lambda: print("SUBMIT"), style="submit.TButton",
+                                   default="active")
+        submit_button.grid(row=0, column=1, sticky=E)
+        self.bind('<Return>', lambda event: submit_button.invoke())
+        self.bind('<KP_Enter>', lambda event: submit_button.invoke())
+
+
 
 
 
@@ -922,6 +1007,6 @@ try:
     root.iconphoto(True, logo_image)
     root.mainloop()
 except (SystemExit, KeyboardInterrupt):
-    print("here")
+    print("Program Ended")
     root.destroy()
 
