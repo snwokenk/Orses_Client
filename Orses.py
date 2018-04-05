@@ -254,6 +254,7 @@ class OrsesCommands:
 
     @staticmethod
     def enable_submit(**kw):
+        print("Hello")
 
         if len(kw["password1"]) > 0 and len(kw["password"]) >= 8 and \
                 (kw["username"] and kw["username"] != "Enter Username"):
@@ -616,7 +617,8 @@ class BaseLoggedInWindow(Toplevel):
     def add_welcome_widgets_to_welcome_frame(self):
         # add a welcome label text
 
-        welcome_label = ttk.Label(self.welcome_frame, text="Welcome To The\nOrses Network Wallet Client\n\nClient ID: ",
+        welcome_label = ttk.Label(self.welcome_frame,
+                                  text="Welcome To The\nOrses Network Wallet Client\n\nYour Client ID: ",
                                   justify="center", style="welcome.TLabel", font=welcome_label_font)
 
         welcome_label.grid(row=0, column=0, sticky=(N,S,E,W))
@@ -685,6 +687,26 @@ class BaseLoggedInWindow(Toplevel):
             padx=int((self.wallet_creation_frame.winfo_width() - cancel_submit_frame.winfo_width())/2),
             pady=int(self.wallet_creation_frame.winfo_height()*.025)
         )
+        cancel_submit_frame.columnconfigure(0, weight=1)
+        cancel_submit_frame.columnconfigure(1, weight=1)
+
+        cancel_button_width = int(self.wallet_creation_frame.winfo_width()*0.015)
+        cancel_button = ttk.Button(cancel_submit_frame, text="CANCEL", width=cancel_button_width,
+                                   command=lambda: (self.wallet_creation_frame.destroy(), self.nickname_text.set(""),
+                                                    self.password_text.set(""), self.password1_text.set("")),
+                                   style="cancel.TButton")
+        cancel_button.grid(row=0, column=0, sticky=W)
+
+
+        # submit_button_width = int(self.form_window_width*0.015)
+        submit_button = ttk.Button(cancel_submit_frame, text="SUBMIT", width=cancel_button_width,
+                                   command=lambda: print("SUBMIT"), style="submit.TButton",
+                                   state="disabled", default="active")
+        submit_button.grid(row=0, column=1, sticky=E)
+        self.bind('<Return>', lambda event: submit_button.invoke())
+        self.bind('<KP_Enter>', lambda event: submit_button.invoke())
+
+
 
         # insert wallet password label AND entry
         password_label = ttk.Label(self.wallet_creation_frame, text="Choose A Password:", background="#181e23",
@@ -707,17 +729,18 @@ class BaseLoggedInWindow(Toplevel):
 
         password1_entry =ttk.Entry(
             self.wallet_creation_frame,
-            textvariable=self.password_text,
+            textvariable=self.password1_text,
             width=40,
             takefocus=False,
             show="*",
+            validate="key",
             validatecommand=lambda: OrsesCommands.enable_submit(password=self.password_text.get(),
                                                                 password1=self.password1_text.get(),
                                                                 username=self.nickname_text,
                                                                 button_instance=submit_button))
         password1_entry.grid(row=6, sticky=S)
         password1_entry.grid_configure(padx=get_padx(self.wallet_creation_frame, password1_entry),
-                                      pady=(0,int(self.wallet_creation_frame.winfo_height() * 0.05)))
+                                       pady=(0,int(self.wallet_creation_frame.winfo_height() * 0.05)))
 
 
 
