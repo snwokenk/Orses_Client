@@ -676,6 +676,9 @@ class BaseLoggedInWindow(Toplevel):
         self.notebookwidget.add(self.wallet_creation_frame, text="Create A Wallet")
         self.notebookwidget.select(self.wallet_creation_frame)
 
+
+
+
         # insert header title "Create A Wallet"
         header_label = ttk.Label(self.wallet_creation_frame, text="Create A Wallet", background="#181e23",
                                  foreground="white", font=welcome_font)
@@ -719,19 +722,28 @@ class BaseLoggedInWindow(Toplevel):
         cancel_button.grid(row=0, column=0, sticky=W)
 
         # submit button disabled until something is in password1 entry
+
+        main_menu_frame = MainWalletMenuFrame(
+            self.notebookwidget,
+            width=self.middle_frame_width,
+            height=self.middle_frame_height
+        )
         submit_button = ttk.Button(
             cancel_submit_frame,
             text="SUBMIT",
             width=cancel_button_width,
             command=lambda: (
-                UserAndWalletCommands.create_wallet(self.nickname_text.get(), self.password_text.get(), self.password1_text.get()),
+                UserAndWalletCommands.create_wallet(
+                    self.nickname_text.get(),
+                    self.password_text.get(),
+                    self.password1_text.get()
+                ),
                 self.notebookwidget.add(
-                    MainWalletMenuFrame(
-                        self.notebookwidget,
-                        width=self.middle_frame_width,
-                        height=self.middle_frame_height
-                    ),
-                    text="Wallet Loaded"),
+                    main_menu_frame,
+                    text="Wallet Loaded"
+                ),
+                self.notebookwidget.select(main_menu_frame),
+                main_menu_frame.insert_frame_based_on_created_client_wallet(),
                 self.wallet_creation_frame.destroy(),
                 print(client_user)
             ),
@@ -881,29 +893,31 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
     def __init__(self, master, **kw):
         super().__init__(master, **kw)
 
+    def insert_frame_based_on_created_client_wallet(self):
         if client_wallet:
             print("wallet client created")
         elif client_wallet is None:
             print("wallet with same nickname exist OR No User Loaded")
 
-            # self.insert_notification_label(
-            #     text="Wallet With The Same Nickname Already Exists",
-            #     font_class=notif_label_font,
-            #     text_color="red"
-            # )
+            self.insert_notification_label(
+                text="Wallet With The Same Nickname Already Exists",
+                font_class=notif_label_font,
+                text_color="red"
+            )
         elif client_wallet is False:
             print("chosen password and retyped password does not match")
-            # self.insert_notification_label(
-            #     text="Passwords Do Not Match, Make Sure To Retype Exact Chosen Password",
-            #     font_class=notif_label_font,
-            #     text_color="red"
-            # )
+            self.insert_notification_label(
+                text="Passwords Do Not Match, Make Sure To Retype Exact Chosen Password",
+                font_class=notif_label_font,
+                text_color="red"
+            )
 
+    def insert_main_menu_widgets_when_wallet_properly_loaded(self):
+        pass
 
     # if wallet not created (false or none)
     def insert_notification_label(self, text, font_class, background_color="#181e23",
                                   text_color="white"):
-
 
 
         # insert label
@@ -912,9 +926,10 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
                                 wraplength=int(self.winfo_width()*0.65), justify="center")
         notif_label.grid(row=9, sticky=N)
         root.update()
-        print(self.winfo_width(), notif_label.winfo_width())
+        print("self winfo, notif_label winfo", self.winfo_width(), notif_label.winfo_width())
         notif_padx = int((self.winfo_width() - notif_label.winfo_width())/2)
         notif_pady = int(self.winfo_height()*0.05)
+        print()
         notif_label.grid_configure(padx=notif_padx, pady=notif_pady)
 
         continue_button_width = int(self.winfo_width()*0.055)
@@ -922,7 +937,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
                                      command=lambda: self.destroy(), style="cancel.TButton", default="active")
         continue_button.grid(row=10, sticky=(N,S))
         root.update()
-        x_axis = int((self.winfo_width() - continue_button)/2)
+        x_axis = int((self.winfo_width() - continue_button.winfo_width())/2)
         continue_button.grid_configure(padx=x_axis, pady=notif_pady)
 
         self.bind('<Return>', lambda event: continue_button.invoke())
