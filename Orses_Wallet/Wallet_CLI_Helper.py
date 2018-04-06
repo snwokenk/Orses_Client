@@ -12,32 +12,21 @@ class WalletCLI:
         self.user = user
         assert isinstance(self.user, User)
 
-    def create_wallet(self):
-        call("clear")
-        print("\n\n* Welcome To The Command Line Interface Of The CryptoHub Blockchain Client *\n\n")
-        print("\t*** YOU'RE LOGGED IN AS: {} | Client ID: {} ***\n\n".format(self.user.username, self.user.client_id))
+    def create_wallet(self, wallet_nickname, wallet_password, wallet_password1):
+        """
 
-        print("Create A Wallet: \n\n")
+        :param wallet_nickname: chosen wallet nickname
+        :param wallet_password: chosen password
+        :param wallet_password1: chosen password typed again for verification
+        :return: Wallet Object if all, None if wallet with same nickname exists on local computer,
+                 False if password and password1 do not match
+        """
 
-        wallet_nickname = input("Wallet Nickname: \n")
-        wallet_password = getpass.getpass("Wallet Password: ")
-        rsp = self.user.create_wallet(wallet_nickname=wallet_nickname, wallet_password=wallet_password)
+        if wallet_password != wallet_password1:
+            return False
 
-        if rsp is True:
-            wall_inst = self.user.wallet_service_instance.wallet_instance
-            print("Wallet Created\n")
-            print("Wallet Nickname Is '{}' | Wallet ID IS {} | Time Of Creation is {}\n".format(
-                wall_inst.get_wallet_nickname(), wall_inst.get_wallet_id(), wall_inst.get_timestamp_of_creation())
-            )
-            input("Press Enter To Continue\n")
-            call("clear")
-            return True
-
-        elif rsp is None:
-            print("\n\n* Wallet With That Nickname Already Created On Local Machine *\n")
-            input("Press Enter To Continue\"")
-            call("clear")
-            return None
+        # if all ok, then new wallet is created with wallet object returned, If a wallet
+        return self.user.create_wallet(wallet_nickname=wallet_nickname, wallet_password=wallet_password)
 
     def load_wallet(self):
         call("clear")

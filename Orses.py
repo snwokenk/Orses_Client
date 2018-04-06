@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 # TODO: after user successfully loaded or created, make main menu window appear DONE
 
 from Orses_User.User_CLI_Helper import UserCLI, User
+from Orses_Wallet.Wallet_CLI_Helper import WalletCLI
 
 
 def change_user(new_val):
@@ -121,6 +122,21 @@ class UserAndWalletCommands:
                 text_color="red",
                 command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
             )
+
+    @staticmethod
+    def create_wallet(wallet_nickname, wallet_password, wallet_password1):
+
+        global client_wallet
+        global client_user
+
+        if client_user:
+            print(client_user)
+            client_wallet = WalletCLI(user=client_user).create_wallet(
+                wallet_nickname=wallet_nickname,
+                wallet_password=wallet_password,
+                wallet_password1=wallet_password1)
+
+
     @staticmethod
     def launch_main_menu(user, window_inst):
         """
@@ -702,16 +718,31 @@ class BaseLoggedInWindow(Toplevel):
                                    style="cancel.TButton")
         cancel_button.grid(row=0, column=0, sticky=W)
 
+        # submit button disabled until something is in password1 entry
+        submit_button = ttk.Button(
+            cancel_submit_frame,
+            text="SUBMIT",
+            width=cancel_button_width,
+            command=lambda: (
+                UserAndWalletCommands.create_wallet(self.nickname_text.get(), self.password_text.get(), self.password1_text.get()),
+                self.notebookwidget.add(
+                    MainWalletMenuFrame(
+                        self.notebookwidget,
+                        width=self.middle_frame_width,
+                        height=self.middle_frame_height
+                    ),
+                    text="Wallet Loaded"),
+                self.wallet_creation_frame.destroy(),
+                print(client_user)
+            ),
+            style="submit.TButton",
+            state="disabled", default="active"
+        )
 
-        # submit_button_width = int(self.form_window_width*0.015)
-        submit_button = ttk.Button(cancel_submit_frame, text="SUBMIT", width=cancel_button_width,
-                                   command=lambda: print("SUBMIT"), style="submit.TButton",
-                                   state="disabled", default="active")
+        # place submit button uton cancel_submit_frame grid
         submit_button.grid(row=0, column=1, sticky=E)
         self.bind('<Return>', lambda event: submit_button.invoke())
         self.bind('<KP_Enter>', lambda event: submit_button.invoke())
-
-
 
         # insert wallet password label AND entry
         password_label = ttk.Label(self.wallet_creation_frame, text="Choose A Password:", background="#181e23",
@@ -826,7 +857,76 @@ class BaseLoggedInWindow(Toplevel):
         self.bind('<KP_Enter>', lambda event: submit_button.invoke())
 
 
+""" Classes For Main Wallet Frames, Used After A Wallet Is Loaded/Created launched with LOAD OR SUBMIT Button on 
+create a wallet or load a wallet frame
+"""
 
+
+class MainWalletFrameForNotebook(ttk.Frame):
+
+    def __init__(self, master, **kw):
+        super().__init__(master, **kw)
+        self["style"] = "middle.TFrame"
+        self.grid_propagate(False)
+        self.row_count = 0
+        self.column_count = 0
+
+
+class MainWalletMenuFrame(MainWalletFrameForNotebook):
+
+    """
+    Use to add frame to a notebook widget, automatically sets width and height and propagate to false
+    """
+
+    def __init__(self, master, **kw):
+        super().__init__(master, **kw)
+
+        if client_wallet:
+            print("wallet client created")
+        elif client_wallet is None:
+            print("wallet with same nickname exist OR No User Loaded")
+
+            # self.insert_notification_label(
+            #     text="Wallet With The Same Nickname Already Exists",
+            #     font_class=notif_label_font,
+            #     text_color="red"
+            # )
+        elif client_wallet is False:
+            print("chosen password and retyped password does not match")
+            # self.insert_notification_label(
+            #     text="Passwords Do Not Match, Make Sure To Retype Exact Chosen Password",
+            #     font_class=notif_label_font,
+            #     text_color="red"
+            # )
+
+
+    # if wallet not created (false or none)
+    def insert_notification_label(self, text, font_class, background_color="#181e23",
+                                  text_color="white"):
+
+
+
+        # insert label
+        notif_label = ttk.Label(self, text=text, background=background_color,
+                                foreground=text_color, font=font_class, relief="ridge",
+                                wraplength=int(self.winfo_width()*0.65), justify="center")
+        notif_label.grid(row=9, sticky=N)
+        root.update()
+        print(self.winfo_width(), notif_label.winfo_width())
+        notif_padx = int((self.winfo_width() - notif_label.winfo_width())/2)
+        notif_pady = int(self.winfo_height()*0.05)
+        notif_label.grid_configure(padx=notif_padx, pady=notif_pady)
+
+        continue_button_width = int(self.winfo_width()*0.055)
+        continue_button = ttk.Button(self, text="CONTINUE", width=continue_button_width,
+                                     command=lambda: self.destroy(), style="cancel.TButton", default="active")
+        continue_button.grid(row=10, sticky=(N,S))
+        root.update()
+        x_axis = int((self.winfo_width() - continue_button)/2)
+        continue_button.grid_configure(padx=x_axis, pady=notif_pady)
+
+        self.bind('<Return>', lambda event: continue_button.invoke())
+        self.bind('<KP_Enter>', lambda event: continue_button.invoke())
 
 
 
