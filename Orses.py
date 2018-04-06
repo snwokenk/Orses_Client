@@ -2,12 +2,35 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import font
 from PIL import Image, ImageTk
+from twisted.internet import tksupport, reactor
 
 # https://stackoverflow.com/questions/17635905/ttk-entry-background-colour/17639955
-# TODO: after user successfully loaded or created, make main menu window appear DONE
+# https://stackoverflow.com/questions/35229352/threading-with-twisted-with-tkinter
 
 from Orses_User.User_CLI_Helper import UserCLI, User
 from Orses_Wallet.Wallet_CLI_Helper import WalletCLI
+
+
+def change_colors(num=1):
+
+    if num <= 4:
+        # using color pick find hex of green
+        if num == 1:
+            ttk_style.configure("try.TFrame", background="green", relief="raised")
+        elif num == 2:
+            ttk_style.configure("try.TFrame", background="#6ee863", relief="raised")
+        elif num == 3:
+            ttk_style.configure("try.TFrame", background="#5be24f", relief="raised")
+        else:
+            ttk_style.configure("try.TFrame", background="#42e234", relief="raised")
+
+        num += 1
+        root.after(250, change_colors, num)
+    else:
+        num = 1
+        ttk_style.configure("try.TFrame", background="#bbe8b7", relief="raised")
+        num += 1
+        root.after(250, change_colors, num)
 
 
 def change_user(new_val):
@@ -33,7 +56,9 @@ client_wallet = None
 # dictionary to hold windows (if necessary)
 windows_dict = dict()
 
+
 class UserAndWalletCommands:
+
     @staticmethod
     def create_user(password, password1, username, window_inst):
         global client_user
@@ -283,7 +308,8 @@ class OrsesCommands:
     @staticmethod
     def exit_program():
         root.destroy()
-        pass
+        reactor.stop()
+        print("Program Ended")
 
 
 class BaseFormWindow(Toplevel):
@@ -535,7 +561,7 @@ class BaseLoggedInWindow(Toplevel):
             left_frame_top,
             text="Exit Client",
             width=self.left_frame_width_btn,
-            command=root.destroy,
+            command=OrsesCommands.exit_program,
             style="cancel.TButton"
         )
         quit_button.grid(row=0, column=0, stick=W)
@@ -728,6 +754,8 @@ class BaseLoggedInWindow(Toplevel):
             width=self.middle_frame_width,
             height=self.middle_frame_height
         )
+
+        # instantiate submit  button
         submit_button = ttk.Button(
             cancel_submit_frame,
             text="SUBMIT",
@@ -745,6 +773,9 @@ class BaseLoggedInWindow(Toplevel):
                 self.notebookwidget.select(main_menu_frame),
                 main_menu_frame.insert_frame_based_on_created_client_wallet(),
                 self.wallet_creation_frame.destroy(),
+                self.nickname_text.set(""),
+                self.password_text.set(""),
+                self.password1_text.set(""),
                 print(client_user)
             ),
             style="submit.TButton",
@@ -752,7 +783,13 @@ class BaseLoggedInWindow(Toplevel):
         )
 
         # place submit button uton cancel_submit_frame grid
-        submit_button.grid(row=0, column=1, sticky=E)
+        submit_button.grid(
+            row=0,
+            column=1,
+            sticky=E
+        )
+
+        # bind submit button to enter key and keypad enter key
         self.bind('<Return>', lambda event: submit_button.invoke())
         self.bind('<KP_Enter>', lambda event: submit_button.invoke())
 
@@ -918,7 +955,6 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
     # if wallet not created (false or none)
     def insert_notification_label(self, text, font_class, background_color="#181e23",
                                   text_color="white"):
-
 
         # insert label
         notif_label = ttk.Label(self, text=text, background=background_color,
@@ -1120,8 +1156,11 @@ lower_frame.rowconfigure(5, weight=1)
 try:
     root.resizable(False, False)
     root.iconphoto(True, logo_image)
-    root.mainloop()
+    root.after(500, print, "Samuel is good")
+    tksupport.install(root)
+    reactor.run()
 except (SystemExit, KeyboardInterrupt):
     print("Program Ended")
     root.destroy()
+    reactor.stop()
 
