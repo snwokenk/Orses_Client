@@ -13,11 +13,23 @@ import queue
 class WalletServiceCLI:
     def __init__(self, user):
         self.user = user
-        self.nm = NetworkManager(user=user)
+        self.nm = NetworkManager(user=user) if user else None
+        self.dict_of_active = dict()
+        self.dict_of_inactive = dict()
 
-        assert isinstance(self.user, User), "not a user class"
-        assert isinstance(self.user.wallet_service_instance, WalletServices), "WalletService Instance Not Loaded"
-        assert isinstance(self.user.wallet_service_instance.wallet_instance, Wallet), "wallet not loaded into user"
+        # assert isinstance(self.user, User), "not a user class"
+        # assert isinstance(self.user.wallet_service_instance, WalletServices), "WalletService Instance Not Loaded"
+        # assert isinstance(self.user.wallet_service_instance.wallet_instance, Wallet), "wallet not loaded into user"
+
+    def set_user_instantiate_net_mgr(self, user):
+
+        if user:
+            self.user = user
+            self.nm = NetworkManager(user=user)
+
+    def get_active_peers(self):
+        if self.nm:
+            self.nm.get_active_peers()
 
     def send_tokens(self, amount, fee, receiving_wid, password_for_wallet, q, q_obj, reactor_instance=None):
 
@@ -175,8 +187,10 @@ class WalletServiceCLI:
 
             # if true, then using default address list, request for updated address list
 
-    def check_active_peers(self, reactor_instance, q_for_active):
-        self.nm.check_active_peers(reactor_instance=reactor_instance, q_object=q_for_active)
+    def check_active_peers(self, reactor_instance):
+
+        if self.nm:
+            self.nm.check_active_peers(reactor_instance=reactor_instance, WSCLI=self)
 
     def manual_network_address_update(self, address_list):
         """

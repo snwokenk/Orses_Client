@@ -6,9 +6,6 @@ from Orses_Network.NetworkAddressManager import NetworkAddressManager
 import time, queue
 
 
-def testprint():
-    print("Samuel In this thread")
-
 
 class NetworkManager:
     def __init__(self, user):
@@ -16,10 +13,20 @@ class NetworkManager:
         :param user: instance of current user
         """
         self.user = user
-        self.net_addr_mgr = NetworkAddressManager(username=user.username)
+        self.net_addr_mgr = NetworkAddressManager(username=user.username) if user else None
         # assert isinstance(self.user, User), "not a user class"
         # assert isinstance(self.user.wallet_service_instance, WalletServices), "WalletService Instance Not Loaded"
         # assert isinstance(self.user.wallet_service_instance.wallet_instance, Wallet), "wallet not loaded into user"
+
+    def set_user_instantiate_net_addr_mgr(self, user):
+        if user:
+            self.user = user
+            self.net_addr_mgr = NetworkAddressManager(username=user.username)
+
+    def get_active_peers(self):
+
+        if self.net_addr_mgr:
+            return self.net_addr_mgr.get_active_peers()
 
     def send_assignment_statement(self, asgn_stmt, wallet_pubkey,reactor_instance, q_object_from_walletcli):
 
@@ -94,7 +101,7 @@ class NetworkManager:
         else:  # if addresses empty send 0.00 as success rate, if this is not done, queue object waits forever
             q_object_from_walletcli.put(0.00)
 
-    def check_active_peers(self, reactor_instance, q_object):
+    def check_active_peers(self, reactor_instance, WSCLI):
         """
         used to connect to addresses from list and check which are currently online
 
@@ -102,7 +109,7 @@ class NetworkManager:
         """
         addresses = self.net_addr_mgr.get_active_peers()
 
-        factory = NetworkAuditorFactory(conn_type="check_active", exp_conn=len(addresses), q_object=q_object)
+        factory = NetworkAuditorFactory(conn_type="check_active", exp_conn=len(addresses), WSCLI=WSCLI)
 
         for i in addresses:
             reactor_instance.connectTCP(host=i, port=addresses[i], factory=factory)

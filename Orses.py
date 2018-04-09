@@ -3,12 +3,33 @@ from tkinter import ttk
 from tkinter import font
 from PIL import Image, ImageTk
 from twisted.internet import tksupport, reactor
+import queue
 
 # https://stackoverflow.com/questions/17635905/ttk-entry-background-colour/17639955
 # https://stackoverflow.com/questions/35229352/threading-with-twisted-with-tkinter
 
 from Orses_User.User_CLI_Helper import UserCLI, User
 from Orses_Wallet.Wallet_CLI_Helper import WalletCLI
+from Orses_Wallet.WalletService_CLI_Helper import WalletServiceCLI
+
+"""
+begin needed functions
+"""
+
+
+def check_active_peers():
+    """
+    used to call backend function for checking active peers
+    :return:
+    """
+    global client_user
+
+    if client_user:
+        q_obj = queue.Queue()
+        WSCLI = WalletServiceCLI(user=client_user)
+        reactor.callFromThread(WSCLI.check_active_peers, reactor_instance=reactor, q_for_active=q_obj)
+    else:
+        return 0
 
 
 def change_colors(num=1):
@@ -48,10 +69,16 @@ def get_padx(master, child):
     root.update()
     return int((master.winfo_width() - child.winfo_width())/2)
 
+"""
+end needed functions
+"""
+
+
 
 # these variables will hold a successfully loaded user object and wallet object
 client_user = None
 client_wallet = None
+WSCLI = WalletServiceCLI(user=client_user)
 
 # dictionary to hold windows (if necessary)
 windows_dict = dict()
@@ -77,6 +104,8 @@ class UserAndWalletCommands:
                 text_color="Green",
                 command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
             )
+
+            WSCLI.set_user_instantiate_net_mgr(user=client_user)
             # for widgets in window_inst.mainframe_lower.grid_slaves():
             #     print(widgets)
 
