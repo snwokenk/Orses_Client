@@ -929,6 +929,9 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
 
     def __init__(self, master, **kw):
         super().__init__(master, **kw)
+        self.top_frame = ttk.Frame(self)
+        self.middle_Frame = ttk.Frame(self)
+        self.lower_frame = ttk.Frame(self)
 
     def insert_frame_based_on_created_client_wallet(self):
         if client_wallet:
@@ -950,7 +953,13 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             )
 
     def insert_main_menu_widgets_when_wallet_properly_loaded(self):
-        pass
+        """
+        3 frames self frame (Main Wallet Menu Frame)
+        top frame will hold the client id, wallet id, mini Logo(O logo), connection status,
+        active peers logo
+        :return:
+        """
+
 
     # if wallet not created (false or none)
     def insert_notification_label(self, text, font_class, background_color="#181e23",
