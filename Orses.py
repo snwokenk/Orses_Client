@@ -77,8 +77,8 @@ class UserAndWalletCommands:
                 text_color="Green",
                 command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
             )
-            for widgets in window_inst.mainframe_lower.grid_slaves():
-                print(widgets)
+            # for widgets in window_inst.mainframe_lower.grid_slaves():
+            #     print(widgets)
 
         elif client_user is False:
             # password and password retype != password
@@ -122,8 +122,8 @@ class UserAndWalletCommands:
                 text_color="Green",
                 command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
             )
-            for widgets in window_inst.mainframe_lower.grid_slaves():
-                print(widgets)
+            # for widgets in window_inst.mainframe_lower.grid_slaves():
+            #     print(widgets)
 
         elif client_user is False:
             # Wrong Password
@@ -155,11 +155,24 @@ class UserAndWalletCommands:
         global client_user
 
         if client_user:
-            print(client_user)
             client_wallet = WalletCLI(user=client_user).create_wallet(
                 wallet_nickname=wallet_nickname,
                 wallet_password=wallet_password,
                 wallet_password1=wallet_password1)
+
+    @staticmethod
+    def load_wallet(wallet_nickname, wallet_password):
+
+
+        global client_wallet
+        global client_user
+
+        if client_user:
+
+            client_wallet = WalletCLI(user=client_user).load_wallet(
+                wallet_nickname=wallet_nickname,
+                wallet_password=wallet_password
+            )
 
 
     @staticmethod
@@ -172,7 +185,6 @@ class UserAndWalletCommands:
         :return:
         """
 
-        print("I'm here")
 
         if user:
             window_inst.destroy()
@@ -690,6 +702,8 @@ class BaseLoggedInWindow(Toplevel):
             self.notebookwidget.select(self.wallet_creation_frame)
             print("Already Created")
             return None
+        elif client_wallet:
+            return None
 
         self.wallet_creation_frame = ttk.Frame(
             self.notebookwidget,
@@ -758,7 +772,7 @@ class BaseLoggedInWindow(Toplevel):
         # instantiate submit  button
         submit_button = ttk.Button(
             cancel_submit_frame,
-            text="SUBMIT",
+            text="CREATE",
             width=cancel_button_width,
             command=lambda: (
                 UserAndWalletCommands.create_wallet(
@@ -771,7 +785,7 @@ class BaseLoggedInWindow(Toplevel):
                     text="Wallet Loaded"
                 ),
                 self.notebookwidget.select(main_menu_frame),
-                main_menu_frame.insert_frame_based_on_created_client_wallet(),
+                main_menu_frame.insert_frame_based_on_created_loaded_client_wallet(),
                 self.wallet_creation_frame.destroy(),
                 self.nickname_text.set(""),
                 self.password_text.set(""),
@@ -831,6 +845,8 @@ class BaseLoggedInWindow(Toplevel):
         if self.load_wallet_frame in self.notebookwidget.winfo_children():
             self.notebookwidget.select(self.load_wallet_frame)
             print("Already Created")
+            return None
+        elif client_wallet:
             return None
 
         self.load_wallet_frame = ttk.Frame(
@@ -898,9 +914,36 @@ class BaseLoggedInWindow(Toplevel):
                                    style="cancel.TButton")
         cancel_button.grid(row=0, column=0, sticky=W)
 
-        submit_button = ttk.Button(cancel_submit_frame, text="LOAD", width=cancel_button_width,
-                                   command=lambda: print("SUBMIT"), style="submit.TButton",
-                                   default="active")
+        # instantiate main menu frame and submit button
+        main_menu_frame = MainWalletMenuFrame(
+            self.notebookwidget,
+            width=self.middle_frame_width,
+            height=self.middle_frame_height
+        )
+
+        submit_button = ttk.Button(
+            cancel_submit_frame,
+            text="LOAD",
+            width=cancel_button_width,
+            command=lambda: (
+                UserAndWalletCommands.load_wallet(
+                    self.load_nickname_text.get(),
+                    self.load_password_text.get(),
+                ),
+                self.notebookwidget.add(
+                    main_menu_frame,
+                    text="Wallet Loaded"
+                ),
+                self.notebookwidget.select(main_menu_frame),
+                main_menu_frame.insert_frame_based_on_created_loaded_client_wallet(created=False),
+                self.load_wallet_frame.destroy(),
+                self.load_nickname_text.set(""),
+                self.load_password_text.set(""),
+                print(client_user)
+            ),
+            default="active",
+            style="submit.TButton"
+        )
         submit_button.grid(row=0, column=1, sticky=E)
         self.bind('<Return>', lambda event: submit_button.invoke())
         self.bind('<KP_Enter>', lambda event: submit_button.invoke())
@@ -933,21 +976,37 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.middle_Frame = ttk.Frame(self)
         self.lower_frame = ttk.Frame(self)
 
-    def insert_frame_based_on_created_client_wallet(self):
+    def insert_frame_based_on_created_loaded_client_wallet(self, created=True):
         if client_wallet:
-            print("wallet client created")
+            if created:
+                print("wallet client created")
+            else:
+                print("wallet client loaded")
+
+            self.insert_main_menu_widgets_when_wallet_properly_loaded()
+
         elif client_wallet is None:
-            print("wallet with same nickname exist OR No User Loaded")
+            if created:
+                print("wallet with same nickname exist OR No User Loaded")
+                text = "Wallet With The Same Nickname Already Exists"
+            else:
+                print("wallet with nickname does not exist")
+                text = "wallet with nickname does not exist"
 
             self.insert_notification_label(
-                text="Wallet With The Same Nickname Already Exists",
+                text=text,
                 font_class=notif_label_font,
                 text_color="red"
             )
         elif client_wallet is False:
-            print("chosen password and retyped password does not match")
+            if created:
+                print("chosen password and retyped password does not match")
+                text = "Passwords Do Not Match, Make Sure To Retype Exact Chosen Password"
+            else:
+                print("Incorrect Wallet Password")
+                text = "Incorrect Wallet Password"
             self.insert_notification_label(
-                text="Passwords Do Not Match, Make Sure To Retype Exact Chosen Password",
+                text= text,
                 font_class=notif_label_font,
                 text_color="red"
             )
@@ -959,11 +1018,143 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         active peers logo
         :return:
         """
+        root.update()
+        # heights of frames, width == width of self frame
+        self.top_frame_height = int(self.winfo_height() * 0.12)
+        self.middle_Frame_height = int(self.winfo_height() * 0.04)
+        self.lower_frame_height = int(self.winfo_height() * 0.80)
+
+        # top frame
+        self.top_frame["width"] = self.winfo_width()
+        self.top_frame["height"] = self.top_frame_height
+        self.top_frame["style"] = "middle.TFrame"
+        # self.top_frame["relief"] = "raised"
+        self.top_frame.grid(row=0)
+        self.top_frame.grid_propagate(False)
+
+        # middle frame
+        self.middle_Frame["width"] = self.winfo_width()
+        self.middle_Frame["height"] = self.middle_Frame_height
+        self.middle_Frame["style"] = "middle.TFrame"
+        self.middle_Frame["relief"] = "sunken"
+        self.middle_Frame.grid(row=1)
+        self.middle_Frame.grid_propagate(False)
+
+        # lower frame
+        self.lower_frame["width"] = self.winfo_width()
+        self.lower_frame["height"] = self.lower_frame_height
+        self.lower_frame["style"] = "middle.TFrame"
+        self.lower_frame["relief"] = "solid"
+        self.lower_frame.grid(row=2)
+        self.lower_frame.grid_propagate(False)
+
+
+
+        # get logo image
+        root.update()
+        image1 = Image.open("OLogo.png")
+        self.logo_image = image1.resize((int(self.top_frame.winfo_height()*0.85), int(self.top_frame_height*0.85)),
+                                        Image.ANTIALIAS)
+        self.logo_image = ImageTk.PhotoImage(self.logo_image)
+
+        root.update()
+        self.__insert_top_frame_widgets()
+        self.__insert_middle_frame_widgets()
+
+    def __insert_top_frame_widgets(self):
+        """
+        3 columns and 2 rows
+        column 0 and row 0 = client id
+        column 0 and row 1 = wallet id
+
+        column 1 and row 0 = part1 of logo
+        column 1 and row 1 = par2  of logo (spans 2 rows)
+
+        column 2 and row 0 = frame with connection state label and blinking light
+        column 2 and row 1 = active peers
+        :return:
+        """
+
+        # insert connection widgets with a frame
+        connect_info_frame = ttk.Frame(
+            self.top_frame,
+            style="middle.TFrame",
+            width=self.top_frame.winfo_width(),
+            height=int(self.top_frame.winfo_height()*0.2),
+        )
+        connect_info_frame.grid(row=0, column=0, sticky=S)
+        connect_info_frame.grid_propagate(False)
+
+
+
+        # connection label in column 0 row o of connection_info_frame
+        connection_label = ttk.Label(
+            connect_info_frame,
+            text="connection status: ",
+            background="#181e23",
+            foreground="white",
+            font=connection_top_label
+        )
+        connection_label.grid(row=0, column=0, sticky=(E, S))
+
+        # connection blinker will be in column 1 row 0
+
+
+
+        # insert logo label
+        logo_label = ttk.Label(
+            self.top_frame,
+            image=self.logo_image,
+            background="#181e23",
+            foreground="white",
+            font=main_menu_top_label
+        )
+        logo_label.grid(column=0, row=1, sticky=S)
+        root.update()
+
+
+        logo_label_padx = int((self.top_frame.winfo_width() - logo_label.winfo_width())/2)
+        logo_label_pady = int((self.top_frame.winfo_height() - logo_label.winfo_height())/2)
+        logo_label.grid_configure(padx=logo_label_padx, pady=0)
+
+        root.update()
+        print("connection frame size: ", connect_info_frame.winfo_width(), connect_info_frame.winfo_height())
+        print("top_frame size", self.top_frame.winfo_width(), self.top_frame.winfo_height())
+        print("logo label size: ", logo_label.winfo_width(), logo_label.winfo_height())
+
+
+
+    def __insert_middle_frame_widgets(self):
+
+        # insert wallet label
+        wallet_id_label = ttk.Label(self.middle_Frame,
+                                    text="Wallet ID: {}".format(
+                                        client_user.wallet_service_instance.wallet_instance.get_wallet_id()
+                                    ),
+                                    background="#181e23",
+                                    foreground="white",
+                                    font=main_menu_top_label)
+        wallet_id_label.grid(column=0, row=0, sticky=(W, S))
+        root.update()
+
+        wallet_id_label_padx= int((self.middle_Frame.winfo_width() - wallet_id_label.winfo_width())/2)
+        wallet_id_label_pady= int((self.middle_Frame.winfo_height() - wallet_id_label.winfo_height())/2)
+        wallet_id_label.grid_configure(pady=wallet_id_label_pady,
+                                       padx=wallet_id_label_padx)
 
 
     # if wallet not created (false or none)
     def insert_notification_label(self, text, font_class, background_color="#181e23",
                                   text_color="white"):
+        """
+        use to display notification if wallet is not created because of wrong password or conflicting nickname
+
+        :param text: warning text
+        :param font_class: font class (notif_label_font
+        :param background_color:
+        :param text_color:
+        :return:
+        """
 
         # insert label
         notif_label = ttk.Label(self, text=text, background=background_color,
@@ -971,10 +1162,8 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
                                 wraplength=int(self.winfo_width()*0.65), justify="center")
         notif_label.grid(row=9, sticky=N)
         root.update()
-        print("self winfo, notif_label winfo", self.winfo_width(), notif_label.winfo_width())
         notif_padx = int((self.winfo_width() - notif_label.winfo_width())/2)
         notif_pady = int(self.winfo_height()*0.05)
-        print()
         notif_label.grid_configure(padx=notif_padx, pady=notif_pady)
 
         continue_button_width = int(self.winfo_width()*0.055)
@@ -1045,13 +1234,15 @@ ttk_style.configure("welcome.TEntry", background="#181e23", foreground="white", 
 """
 Font Declarations
 """
-welcome_font = font.Font(family="clearlyu devanagari", size=24, weight="bold", underline=True)
+welcome_font = font.Font(family="fixed", size=24, weight="bold", underline=True)
 print(font.families())
 
 form_label_font = font.Font(family="fixed", size=16, weight="normal", underline=True)
+main_menu_top_label = font.Font(family="fixed", size=12, weight="bold", )
+connection_top_label = font.Font(family="fixed", size=8, weight="normal", )
 notif_label_font = font.Font(family="fixed", size=16, weight="normal")
-menu_header_label_font = font.Font(family="song ti", size=24, weight="normal")
-welcome_label_font = font.Font(family="Times", size=32, weight="bold",)
+menu_header_label_font = font.Font(family="fixed", size=24, weight="normal")
+welcome_label_font = font.Font(family="fixed", size=32, weight="bold",)
 
 
 
@@ -1116,7 +1307,7 @@ login_frame.rowconfigure(1, weight=10)
 # top frame widgets
 
 # logo Image
-image1 = Image.open("Orses.png")
+image1 = Image.open("fullLogo.png")
 image1 = image1.resize((int(login_frame_width/4), int(login_frame_height*0.2)), Image.ANTIALIAS)
 logo_image = ImageTk.PhotoImage(image1)
 
@@ -1165,7 +1356,7 @@ lower_frame.rowconfigure(5, weight=1)
 try:
     root.resizable(False, False)
     root.iconphoto(True, logo_image)
-    root.after(500, print, "Samuel is good")
+    # root.after(500, print, "Samuel is good")
     tksupport.install(root)
     reactor.run()
 except (SystemExit, KeyboardInterrupt):
