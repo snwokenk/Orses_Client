@@ -87,7 +87,7 @@ class NetworkAddressManager:
 
         addr_list = FileAction.open_file_from_json(
             filename=filenames.default_addr_list,
-            in_folder="CryptoHub_Network"
+            in_folder="Orses_Network"
         )
 
         return addr_list

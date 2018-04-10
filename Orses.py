@@ -3,7 +3,6 @@ from tkinter import ttk
 from tkinter import font
 from PIL import Image, ImageTk
 from twisted.internet import tksupport, reactor
-import queue
 
 # https://stackoverflow.com/questions/17635905/ttk-entry-background-colour/17639955
 # https://stackoverflow.com/questions/35229352/threading-with-twisted-with-tkinter
@@ -25,11 +24,19 @@ def check_active_peers():
     global client_user
 
     if client_user:
-        q_obj = queue.Queue()
-        WSCLI = WalletServiceCLI(user=client_user)
-        reactor.callFromThread(WSCLI.check_active_peers, reactor_instance=reactor, q_for_active=q_obj)
+        reactor.callFromThread(WSCLI.check_active_peers, reactor_instance=reactor)
     else:
-        return 0
+        return
+
+
+def periodic_network_check(label_widget, wscli):
+    label_widget["text"] = "Active Peers: {}".format(len(wscli.dict_of_active))
+
+    print("checking")
+    check_active_peers()
+    root.after(5000, periodic_network_check, label_widget, wscli)
+
+
 
 
 def change_colors(num=1):
@@ -153,6 +160,7 @@ class UserAndWalletCommands:
             )
             # for widgets in window_inst.mainframe_lower.grid_slaves():
             #     print(widgets)
+            WSCLI.set_user_instantiate_net_mgr(user=client_user)
 
         elif client_user is False:
             # Wrong Password
@@ -1117,14 +1125,16 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
 
 
         # connection label in column 0 row o of connection_info_frame
+        check_active_peers()
         connection_label = ttk.Label(
             connect_info_frame,
-            text="connection status: ",
+            text="connection status: {}".format(len(WSCLI.dict_of_active)),
             background="#181e23",
             foreground="white",
             font=connection_top_label
         )
         connection_label.grid(row=0, column=0, sticky=(E, S))
+        root.after(5000, periodic_network_check, connection_label, WSCLI)
 
         # connection blinker will be in column 1 row 0
 
@@ -1150,7 +1160,6 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         print("connection frame size: ", connect_info_frame.winfo_width(), connect_info_frame.winfo_height())
         print("top_frame size", self.top_frame.winfo_width(), self.top_frame.winfo_height())
         print("logo label size: ", logo_label.winfo_width(), logo_label.winfo_height())
-
 
 
     def __insert_middle_frame_widgets(self):
