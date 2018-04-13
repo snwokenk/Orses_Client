@@ -34,7 +34,7 @@ def periodic_network_check(label_widget, wscli):
 
     print("checking")
     check_active_peers()
-    root.after(5000, periodic_network_check, label_widget, wscli)
+    # root.after(5000, periodic_network_check, label_widget, wscli)
 
 
 
@@ -1089,14 +1089,15 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
 
         # get logo image
         root.update()
-        image1 = Image.open("OLogo.png")
-        self.logo_image = image1.resize((int(self.top_frame.winfo_height()*0.85), int(self.top_frame_height*0.85)),
+        image2 = Image.open("OLogo.png")
+        self.logo_image = image2.resize((int(self.top_frame.winfo_height()*0.85), int(self.top_frame_height*0.85)),
                                         Image.ANTIALIAS)
         self.logo_image = ImageTk.PhotoImage(self.logo_image)
 
         root.update()
         self.__insert_top_frame_widgets()
         self.__insert_middle_frame_widgets()
+        self.__insert_lower_frame_widgets()
 
     def __insert_top_frame_widgets(self):
         """
@@ -1128,13 +1129,13 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         check_active_peers()
         connection_label = ttk.Label(
             connect_info_frame,
-            text="connection status: {}".format(len(WSCLI.dict_of_active)),
+            text="Active Peers: {}".format(len(WSCLI.dict_of_active)),
             background="#181e23",
             foreground="white",
             font=connection_top_label
         )
         connection_label.grid(row=0, column=0, sticky=(E, S))
-        root.after(5000, periodic_network_check, connection_label, WSCLI)
+        root.after(1000, periodic_network_check, connection_label, WSCLI)
 
         # connection blinker will be in column 1 row 0
 
@@ -1161,7 +1162,6 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         print("top_frame size", self.top_frame.winfo_width(), self.top_frame.winfo_height())
         print("logo label size: ", logo_label.winfo_width(), logo_label.winfo_height())
 
-
     def __insert_middle_frame_widgets(self):
 
         # insert wallet label
@@ -1179,6 +1179,38 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         wallet_id_label_pady= int((self.middle_Frame.winfo_height() - wallet_id_label.winfo_height())/2)
         wallet_id_label.grid_configure(pady=wallet_id_label_pady,
                                        padx=wallet_id_label_padx)
+
+    def __insert_lower_frame_widgets(self):
+        frame_for_buttonlike_canvas = ttk.Frame(
+            self.lower_frame,
+            style="middle.TFrame",
+            width=self.lower_frame.winfo_width(),
+            height=int(self.lower_frame.winfo_height()*0.60),
+        )
+        frame_for_buttonlike_canvas.grid(row=0)
+
+        # 4 square button_like canvas will be created. 1 for "send tokens" 2 for "receive tokens"
+        # 3 for "validate balance" and 4 for "Make Wallet Blockchain Connected"(this is disabled if not enough tokens
+
+        root.update()
+
+        # first canvas button "Send Tokens"
+        snd_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Send\nTokens", color="#222a30")
+        snd_tkn_canvas_btn.grid(row=0, column=0)
+
+        # second canvas buton "Receive Tokens"
+        rcv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Receive\nTokens", color="#1d252b")
+        rcv_tkn_canvas_btn.grid(row=0, column=1)
+
+        # 3rd canvas button "Validate Balance"
+        validate_balance_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Validate\nBalance",
+                                                       color="#26313a")
+        validate_balance_canvas_btn.grid(row=1, column=0)
+
+        # 4th canvas button "Reserve Token"
+        rsv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Reserve\nTokens", color="#33434f")
+        rsv_tkn_canvas_btn.grid(row=1, column=1)
+
 
 
     # if wallet not created (false or none)
@@ -1214,6 +1246,49 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
 
         self.bind('<Return>', lambda event: continue_button.invoke())
         self.bind('<KP_Enter>', lambda event: continue_button.invoke())
+
+
+class ButtonLikeCanvas(Canvas):
+
+    def __init__(self, master, text, padx=None, pady=None, image=None,color=None,**kw):
+        super().__init__(master, **kw)
+        assert isinstance(master, (Canvas, ttk.Frame, Frame, Toplevel, Tk)), "not proper master"
+        self["width"] = int(master.winfo_width()/4)
+        self["height"] = int(master.winfo_width()/4)
+        self["relief"] = "raised"
+        self["background"] = "#2d3e4c" if color is None else color
+        self["borderwidth"] = 0
+        self["highlightthickness"] = 0
+        self["highlightcolor"] = color if color else self["highlightcolor"]
+
+        self.padx = padx if padx else int(master.winfo_width()/10)
+        self.pady = pady if pady else int(master.winfo_height()/8)
+        self.grid_configure(padx=self.padx, pady=self.pady)
+
+        self.text = text
+        self.image = image
+        self.create_text(90, 80, text=text, justify=CENTER, anchor=CENTER,
+                         font=font.Font(family="Times", size=16, weight="bold"), fill="white")
+
+
+        self.bind("<Button-1>", self.__pressed)
+        self.bind("<ButtonRelease-1>", lambda e: root.after(250, self.__pressed_released, e))
+
+
+    def __pressed(self, event):
+
+        print(self["relief"], "\n", event)
+        self["relief"] = "sunken"
+        print(self.bbox(1))
+        self.move(1, 1, 1)
+
+    def __pressed_released(self, event):
+
+        print("button released", "\n", event)
+        self["relief"] = "raised"
+        print(self.bbox(1))
+        self.move(1, -1, -1)
+
 
 
 
@@ -1277,7 +1352,7 @@ print(font.families())
 
 form_label_font = font.Font(family="fixed", size=16, weight="normal", underline=True)
 main_menu_top_label = font.Font(family="fixed", size=12, weight="bold", )
-connection_top_label = font.Font(family="fixed", size=8, weight="normal", )
+connection_top_label = font.Font(family="fixed", size=9, weight="normal", )
 notif_label_font = font.Font(family="fixed", size=16, weight="normal")
 menu_header_label_font = font.Font(family="fixed", size=24, weight="normal")
 welcome_label_font = font.Font(family="fixed", size=32, weight="bold",)
