@@ -199,8 +199,6 @@ class UserAndWalletCommands:
 
     @staticmethod
     def load_wallet(wallet_nickname, wallet_password):
-
-
         global client_wallet
         global client_user
 
@@ -650,10 +648,10 @@ class BaseLoggedInWindow(Toplevel):
         link_btn_width = int(left_frame_top_mid_width/10.05)  # ration is ~ 1 to 7.05
 
         self.insert_btn_link(left_frame_top_mid, row=2, column=0, width=link_btn_width,
-                             command=self.add_wallet_creation_frame, text="Create A Wallet",
+                             command=lambda: self.add_wallet_creation_frame(left_frame_top_mid), text="Create A Wallet",
                              master_height=left_frame_top__mid_height)
         self.insert_btn_link(left_frame_top_mid, row=3, column=0, width=link_btn_width,
-                             command=self.add_load_wallet_frame, text="Load A Wallet",
+                             command=lambda: self.add_load_wallet_frame(left_frame_top_mid), text="Load A Wallet",
                              master_height=left_frame_top__mid_height)
         self.insert_btn_link(left_frame_top_mid, row=4, column=0, width=link_btn_width,
                              command=lambda: print("Pushed"), text="List Owned Wallets",
@@ -732,13 +730,18 @@ class BaseLoggedInWindow(Toplevel):
                                     font=font.Font(family="Times", size=24, weight="bold",))
         client_id_entry.grid(row=2, column=0)
 
-    def add_wallet_creation_frame(self):
+    def add_wallet_creation_frame(self, left_frame_top_mid):
 
         # checks to see if self.wallet_creation_frame is already a child of self.notebookwidget
         if self.wallet_creation_frame in self.notebookwidget.winfo_children():
             self.notebookwidget.select(self.wallet_creation_frame)
             print("Already Created")
             return None
+        elif self.load_wallet_frame in self.notebookwidget.winfo_children():
+            self.load_wallet_frame.destroy(),
+            self.load_nickname_text.set(""),
+            self.load_password_text.set(""),
+
         elif client_wallet:
             return None
 
@@ -827,6 +830,7 @@ class BaseLoggedInWindow(Toplevel):
                 self.nickname_text.set(""),
                 self.password_text.set(""),
                 self.password1_text.set(""),
+                self.change_left_frame_top_mid(left_frame_top_mid, main_menu_frame),
                 print(client_user)
             ),
             style="submit.TButton",
@@ -878,11 +882,17 @@ class BaseLoggedInWindow(Toplevel):
         password1_entry.grid_configure(padx=get_padx(self.wallet_creation_frame, password1_entry),
                                        pady=(0,int(self.wallet_creation_frame.winfo_height() * 0.05)))
 
-    def add_load_wallet_frame(self):
+    def add_load_wallet_frame(self, left_frame_top_mid):
         if self.load_wallet_frame in self.notebookwidget.winfo_children():
             self.notebookwidget.select(self.load_wallet_frame)
             print("Already Created")
             return None
+        elif self.wallet_creation_frame in self.notebookwidget.winfo_children():
+            # if wallet creation form already displaying and user clicks load, the form and anything typed are deleted
+            self.wallet_creation_frame.destroy()
+            self.nickname_text.set("")
+            self.password_text.set("")
+            self.password1_text.set("")
         elif client_wallet:
             return None
 
@@ -976,6 +986,7 @@ class BaseLoggedInWindow(Toplevel):
                 self.load_wallet_frame.destroy(),
                 self.load_nickname_text.set(""),
                 self.load_password_text.set(""),
+                self.change_left_frame_top_mid(left_frame_top_mid, main_menu_frame),
                 print(client_user)
             ),
             default="active",
@@ -984,6 +995,47 @@ class BaseLoggedInWindow(Toplevel):
         submit_button.grid(row=0, column=1, sticky=E)
         self.bind('<Return>', lambda event: submit_button.invoke())
         self.bind('<KP_Enter>', lambda event: submit_button.invoke())
+
+    def change_left_frame_top_mid(self, left_frame_top_mid, main_menu_frame):
+        global client_wallet
+        if client_wallet:
+            for i in left_frame_top_mid.winfo_children():
+                print("child: ", i, type(i))
+                if isinstance(i, ttk.Button):
+                    i.grid_remove()
+            link_btn_width = int(self.left_frame_width/10.05)  # ration is ~ 1 to 7.05
+            left_frame_top__mid_height = int(self.left_frame_height*0.40)
+            self.insert_btn_link(
+                left_frame_top_mid,
+                row=5,
+                column=0,
+                width=link_btn_width,
+                command=lambda: (
+                    change_wallet(None),
+                    self.undo_change_left_frame_top_mid(left_frame_top_mid, main_menu_frame)
+                ),
+                text="Unload Wallet",
+                master_height=left_frame_top__mid_height)
+
+        for i in left_frame_top_mid.winfo_children():
+            print("checking: ", i)
+            print(i.grid_info())
+            print("=======")
+
+    def undo_change_left_frame_top_mid(self, left_frame_top_mid, main_menu_frame):
+
+        main_menu_frame.destroy()
+        for i in left_frame_top_mid.winfo_children():
+            print("child: ", i, type(i))
+            if isinstance(i, ttk.Button):
+                if i.grid_info():
+                    i.destroy()
+                else:
+                    i.grid()
+
+
+
+
 
 
 """ Classes For Main Wallet Frames, Used After A Wallet Is Loaded/Created launched with LOAD OR SUBMIT Button on 
@@ -1093,6 +1145,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.logo_image = image2.resize((int(self.top_frame.winfo_height()*0.85), int(self.top_frame_height*0.85)),
                                         Image.ANTIALIAS)
         self.logo_image = ImageTk.PhotoImage(self.logo_image)
+        image2.close()
 
         root.update()
         self.__insert_top_frame_widgets()
@@ -1195,11 +1248,11 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         root.update()
 
         # first canvas button "Send Tokens"
-        snd_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Send\nTokens", color="#222a30")
+        snd_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Send\nTokens", color="#33434f")
         snd_tkn_canvas_btn.grid(row=0, column=0)
 
         # second canvas buton "Receive Tokens"
-        rcv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Receive\nTokens", color="#1d252b")
+        rcv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Receive\nTokens", color="#26313a")
         rcv_tkn_canvas_btn.grid(row=0, column=1)
 
         # 3rd canvas button "Validate Balance"
@@ -1249,19 +1302,22 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
 
 
 class ButtonLikeCanvas(Canvas):
+    """
+    use this class to create buttons from canvas
+    """
 
-    def __init__(self, master, text, padx=None, pady=None, image=None,color=None,**kw):
+    def __init__(self, master, text, command=None, padx=None, pady=None, image=None,color=None,**kw):
         super().__init__(master, **kw)
         assert isinstance(master, (Canvas, ttk.Frame, Frame, Toplevel, Tk)), "not proper master"
         self["width"] = int(master.winfo_width()/4)
         self["height"] = int(master.winfo_width()/4)
         self["relief"] = "raised"
         self["background"] = "#2d3e4c" if color is None else color
-        self["borderwidth"] = 0
+        self["borderwidth"] = 2
         self["highlightthickness"] = 0
         self["highlightcolor"] = color if color else self["highlightcolor"]
 
-        self.padx = padx if padx else int(master.winfo_width()/10)
+        self.padx = padx if padx else int((master.winfo_width())/8)
         self.pady = pady if pady else int(master.winfo_height()/8)
         self.grid_configure(padx=self.padx, pady=self.pady)
 
@@ -1269,7 +1325,7 @@ class ButtonLikeCanvas(Canvas):
         self.image = image
         self.create_text(90, 80, text=text, justify=CENTER, anchor=CENTER,
                          font=font.Font(family="Times", size=16, weight="bold"), fill="white")
-
+        self.command = command
 
         self.bind("<Button-1>", self.__pressed)
         self.bind("<ButtonRelease-1>", lambda e: root.after(250, self.__pressed_released, e))
@@ -1279,15 +1335,20 @@ class ButtonLikeCanvas(Canvas):
 
         print(self["relief"], "\n", event)
         self["relief"] = "sunken"
-        print(self.bbox(1))
-        self.move(1, 1, 1)
+        # print(self.bbox(1))
+        self.move(1, 1, 1)  # used to moved create_text id right and down 1 pixel (simulates button moving)
 
     def __pressed_released(self, event):
 
         print("button released", "\n", event)
         self["relief"] = "raised"
-        print(self.bbox(1))
-        self.move(1, -1, -1)
+        # print(self.bbox(1))
+        self.move(1, -1, -1)  # used to moved create_text id left and up 1 pixel (simulates button moving)
+        if callable(self.command):
+            self.command()
+        else:
+            print("command argument must be a callable ie. function")
+
 
 
 
@@ -1466,9 +1527,15 @@ exit_button.grid(column=0, row=5,)
 exit_button.grid_configure(padx=button_padx)
 lower_frame.rowconfigure(5, weight=1)
 
+# self.logo_image = image2.resize((int(self.top_frame.winfo_height()*0.85), int(self.top_frame_height*0.85)),
+#                                 Image.ANTIALIAS)
+
+icon_photo = ImageTk.PhotoImage(Image.open("OLogo.png"))
+
 try:
     root.resizable(False, False)
-    root.iconphoto(True, logo_image)
+    # root.iconphoto(True, logo_image)
+    root.iconphoto(True, icon_photo)
     # root.after(500, print, "Samuel is good")
     tksupport.install(root)
     reactor.run()
