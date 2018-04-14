@@ -727,7 +727,7 @@ class BaseLoggedInWindow(Toplevel):
         client_id_entry = ttk.Entry(self.welcome_frame, textvariable=self.client_id_str,
                                     width=len(self.client_id_str.get()),
                                     exportselection=1, style="welcome.TEntry",
-                                    font=font.Font(family="Times", size=24, weight="bold",))
+                                    font=font.Font(family="Times", size=20, weight="bold",))
         client_id_entry.grid(row=2, column=0)
 
     def add_wallet_creation_frame(self, left_frame_top_mid):
@@ -1363,6 +1363,7 @@ root = Tk()
 
 root.title("Orses Network Wallet Client")
 
+
 """ 
 Styles Declarations 
 
@@ -1377,16 +1378,14 @@ ttk_style.configure("middle.TFrame", background="#181e23", foreground="black")
 ttk_style.configure("middle1.TFrame", background="white", foreground="black")
 ttk_style.configure("right.TFrame", background="#101519")
 
-ttk_style.configure("login.TButton", background="#36444f", foreground="white", font=font.Font(family="Times", size=6))
-ttk_style.configure("cancel.TButton", background="#E1524A", foreground="black", font=font.Font(family="Times", size=12,
-                                                                                               weight="bold"))
+ttk_style.configure("login.TButton", background="#36444f", foreground="#e6e8ed", font=("Times", 16, "bold"))
+ttk_style.configure("cancel.TButton", background="#E1524A", foreground="black", font=("Courier", 16, "bold"))
 ttk_style.configure("logout.TButton", background="#3f5ac6", foreground="black",
-                    font=font.Font(family="Times", size=12, weight="bold"))
-ttk_style.configure("submit.TButton", background="#43A26E", foreground="black", font=font.Font(family="Times", size=12,
-                                                                                               weight="bold"))
+                    font=("Courier", 16, "bold"))
+ttk_style.configure("submit.TButton", background="#43A26E", foreground="black", font=("Courier", 16, "bold"))
 
-ttk_style.configure("link.TButton", background="#303335", foreground="white",
-                    font=font.Font(family="Times", size=14, weight="bold"), relief="flat")
+ttk_style.configure("link.TButton", background="#303335", foreground="#e6e8ed",
+                    font=("Courier", 16, "bold"), relief="flat")
 ttk_style.map(
     "link.TButton",
     background=[
@@ -1395,28 +1394,41 @@ ttk_style.map(
     ]
 
 )
-ttk_style.configure("middle.TNotebook", background='#181e23', foreground="white",
+ttk_style.configure("middle.TNotebook", background='#181e23', foreground="white")
+ttk_style.configure("middle.TNotebook.Tab", background="#263038",foreground="#e6e8ed",
                     font=font.Font(family="Times", size=120, weight="bold"))
-ttk_style.configure("middle.TNotebook.Tab", background='white', foreground="black",
-                    font=font.Font(family="Times", size=120, weight="bold"))
+ttk_style.map(
+    "middle.TNotebook.Tab",
+    background=[
+
+        ('active', "#181e23"),
+        ('background', "#181e23"),
+        ('selected', '#181e23'),
+        ('focus', "#181e23"),
+        ('invalid', "#181e23")
+    ]
+
+)
 ttk_style.configure("welcome.TLabel", background="#181e23", foreground="white")
 ttk_style.configure("welcome.TEntry", background="#181e23", foreground="white", fieldbackground="#181e23",
-                    font=font.Font(family="Times", size=32, weight="bold",))
+                    font=font.Font(family="Times", size=64, weight="bold",))
 
 
 
 """
 Font Declarations
 """
-welcome_font = font.Font(family="fixed", size=24, weight="bold", underline=True)
+welcome_font = font.Font(family="clearlyu devanagari", size=24, weight="bold", underline=True)
 print(font.families())
 
-form_label_font = font.Font(family="fixed", size=16, weight="normal", underline=True)
-main_menu_top_label = font.Font(family="fixed", size=12, weight="bold", )
-connection_top_label = font.Font(family="fixed", size=9, weight="normal", )
-notif_label_font = font.Font(family="fixed", size=16, weight="normal")
-menu_header_label_font = font.Font(family="fixed", size=24, weight="normal")
-welcome_label_font = font.Font(family="fixed", size=32, weight="bold",)
+form_label_font = font.Font(family="Times", size=16, weight="normal", underline=True)
+main_menu_top_label = font.Font(family="Times", size=12, weight="bold", )
+notif_label_font = font.Font(family="Times", size=16, weight="normal")
+menu_header_label_font = font.Font(family="Times", size=24, weight="normal")
+welcome_label_font = font.Font(family="Times", size=22, weight="normal",)
+connection_top_label = font.Font(family="Times", size=9, weight="normal")
+
+
 
 
 
