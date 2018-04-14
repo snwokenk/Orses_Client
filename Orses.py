@@ -918,7 +918,7 @@ class BaseLoggedInWindow(Toplevel):
         header_label.grid_configure(padx=header_label_padx, pady=header_label_pady)
 
         # insert wallet nickname label and Entry
-        nickname_label = ttk.Label(self.load_wallet_frame, text="Wallet NickName:", background="#181e23",
+        nickname_label = ttk.Label(self.load_wallet_frame, text="Wallet Nickname:", background="#181e23",
                                    foreground="white", font=form_label_font)
         nickname_label.grid(row=1, sticky=N)
         nickname_label.grid_configure(padx=get_padx(self.load_wallet_frame, nickname_label))
@@ -930,7 +930,7 @@ class BaseLoggedInWindow(Toplevel):
         nickname_entry.focus()
 
         # insert wallet password label AND entry
-        password_label = ttk.Label(self.load_wallet_frame, text="Choose A Password:", background="#181e23",
+        password_label = ttk.Label(self.load_wallet_frame, text="Wallet Password:", background="#181e23",
                                    foreground="white", font=form_label_font)
         password_label.grid(row=3, sticky=N)
         password_label.grid_configure(padx=get_padx(self.load_wallet_frame, password_label))
@@ -1396,7 +1396,7 @@ ttk_style.map(
 )
 ttk_style.configure("middle.TNotebook", background='#181e23', foreground="white")
 ttk_style.configure("middle.TNotebook.Tab", background="#263038",foreground="#e6e8ed",
-                    font=font.Font(family="Times", size=120, weight="bold"))
+                    font=("Times", 12, "normal"))
 ttk_style.map(
     "middle.TNotebook.Tab",
     background=[
