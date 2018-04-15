@@ -415,7 +415,7 @@ class BaseFormWindow(Toplevel):
         welcome1_label.grid_configure(padx=int(self.form_window_width*0.35))
         self.mainframe_top.rowconfigure(0, weight=1)
 
-    def insert_header_title(self, title, font_class, background_color="#20262b", text_color="white"):
+    def insert_header_title(self, title, font_class, background_color="#20262b", text_color="#c2c5ce"):
 
         header_padx = (int(self.form_window_width*0.31), 0)
         header_pady = (int(self.mainframe_lower_height*0.01),
@@ -425,7 +425,7 @@ class BaseFormWindow(Toplevel):
         header_label.grid(row=0, sticky=N)
         header_label.grid_configure(padx=header_padx, pady=header_pady)
 
-    def insert_username(self, font_class, label_text="username:", background_color="#20262b", text_color="white"):
+    def insert_username(self, font_class, label_text="username:", background_color="#20262b", text_color="#c2c5ce"):
 
         username_label = ttk.Label(self.mainframe_lower, text=label_text, background=background_color,
                                    foreground=text_color, font=font_class)
@@ -437,7 +437,7 @@ class BaseFormWindow(Toplevel):
         username_entry.grid_configure(padx=self.entry_padx, pady=self.entry_pady)
         username_entry.focus()
 
-    def insert_password(self, font_class,label_text="Password:", background_color="#20262b", text_color="white"):
+    def insert_password(self, font_class,label_text="Password:", background_color="#20262b", text_color="#c2c5ce"):
 
         password_label = ttk.Label(self.mainframe_lower, text=label_text, background=background_color,
                                    foreground=text_color, font=font_class)
@@ -449,7 +449,7 @@ class BaseFormWindow(Toplevel):
         password_entry.grid_configure(padx=self.entry_padx, pady=self.entry_pady)
 
     def insert_password_again(self, font_class,label_text="Re-enter Password:", background_color="#20262b",
-                              text_color="white"):
+                              text_color="#c2c5ce"):
 
         password_label = ttk.Label(self.mainframe_lower, text=label_text, background=background_color,
                                    foreground=text_color, font=font_class)
@@ -632,7 +632,7 @@ class BaseLoggedInWindow(Toplevel):
         wallet_frame.grid(row=0, sticky=(W,E,S,N))
 
         wallet_menu_label = ttk.Label(wallet_frame, text="Wallet", font=menu_header_label_font,
-                                      background="#242728", foreground="white")
+                                      background="#242728", foreground="#c2c5ce")
         wallet_menu_label.grid(row=0, sticky=(N,S,E,W))
         # use root.update to update width value of widgets after root.mainloop()
         root.update()
@@ -671,7 +671,7 @@ class BaseLoggedInWindow(Toplevel):
         market_frame.grid(row=0, sticky=(W,E,S,N))
 
         market_menu_label = ttk.Label(market_frame, text="Marketplace", font=menu_header_label_font,
-                                      background="#242728", foreground="white")
+                                      background="#242728", foreground="#c2c5ce")
         market_menu_label.grid(row=0, sticky=(N,S,E,W))
         # use root.update to update width value of widgets after root.mainloop()
         root.update()
@@ -727,7 +727,7 @@ class BaseLoggedInWindow(Toplevel):
         client_id_entry = ttk.Entry(self.welcome_frame, textvariable=self.client_id_str,
                                     width=len(self.client_id_str.get()),
                                     exportselection=1, style="welcome.TEntry",
-                                    font=font.Font(family="Times", size=20, weight="bold",))
+                                    font=font.Font(family="Times", size=16, weight="bold",))
         client_id_entry.grid(row=2, column=0)
 
     def add_wallet_creation_frame(self, left_frame_top_mid):
@@ -1378,13 +1378,13 @@ ttk_style.configure("middle.TFrame", background="#181e23", foreground="black")
 ttk_style.configure("middle1.TFrame", background="white", foreground="black")
 ttk_style.configure("right.TFrame", background="#101519")
 
-ttk_style.configure("login.TButton", background="#36444f", foreground="#e6e8ed", font=("Times", 16, "bold"))
+ttk_style.configure("login.TButton", background="#36444f", foreground="#c2c5ce", font=("Times", 16, "bold"))
 ttk_style.configure("cancel.TButton", background="#E1524A", foreground="black", font=("Courier", 16, "bold"))
 ttk_style.configure("logout.TButton", background="#3f5ac6", foreground="black",
                     font=("Courier", 16, "bold"))
 ttk_style.configure("submit.TButton", background="#43A26E", foreground="black", font=("Courier", 16, "bold"))
 
-ttk_style.configure("link.TButton", background="#303335", foreground="#e6e8ed",
+ttk_style.configure("link.TButton", background="#303335", foreground="#c2c5cesa",
                     font=("Courier", 16, "bold"), relief="flat")
 ttk_style.map(
     "link.TButton",
@@ -1394,8 +1394,8 @@ ttk_style.map(
     ]
 
 )
-ttk_style.configure("middle.TNotebook", background='#181e23', foreground="white")
-ttk_style.configure("middle.TNotebook.Tab", background="#263038",foreground="#e6e8ed",
+ttk_style.configure("middle.TNotebook", background='#181e23', foreground="#c2c5ce")
+ttk_style.configure("middle.TNotebook.Tab", background="#263038",foreground="#c2c5ce",
                     font=("Times", 12, "normal"))
 ttk_style.map(
     "middle.TNotebook.Tab",
@@ -1409,8 +1409,8 @@ ttk_style.map(
     ]
 
 )
-ttk_style.configure("welcome.TLabel", background="#181e23", foreground="white")
-ttk_style.configure("welcome.TEntry", background="#181e23", foreground="white", fieldbackground="#181e23",
+ttk_style.configure("welcome.TLabel", background="#181e23", foreground="#c2c5ce")
+ttk_style.configure("welcome.TEntry", background="#181e23", foreground="#c2c5ce", fieldbackground="#181e23",
                     font=font.Font(family="Times", size=64, weight="bold",))
 
 
@@ -1418,14 +1418,15 @@ ttk_style.configure("welcome.TEntry", background="#181e23", foreground="white", 
 """
 Font Declarations
 """
-welcome_font = font.Font(family="clearlyu devanagari", size=24, weight="bold", underline=True)
+welcome_font = font.Font(family="Times", size=18, weight="bold", underline=True)
+
 print(font.families())
 
-form_label_font = font.Font(family="Times", size=16, weight="normal", underline=True)
+form_label_font = font.Font(family="Times", size=14, weight="bold", underline=True)
 main_menu_top_label = font.Font(family="Times", size=12, weight="bold", )
 notif_label_font = font.Font(family="Times", size=16, weight="normal")
-menu_header_label_font = font.Font(family="Times", size=24, weight="normal")
-welcome_label_font = font.Font(family="Times", size=22, weight="normal",)
+menu_header_label_font = font.Font(family="Times", size=20, weight="normal")
+welcome_label_font = font.Font(family="courier", size=20, weight="normal",)
 connection_top_label = font.Font(family="Times", size=9, weight="normal")
 
 
