@@ -771,7 +771,7 @@ class BaseLoggedInWindow(Toplevel):
 
         # insert wallet nickname label and Entry
         nickname_label = ttk.Label(self.wallet_creation_frame, text="Choose A Wallet NickName:", background="#181e23",
-                                   foreground="white", font=form_label_font)
+                                   foreground="#c2c5ce", font=form_label_font)
         nickname_label.grid(row=1, sticky=N)
         nickname_label.grid_configure(padx=get_padx(self.wallet_creation_frame, nickname_label))
 
@@ -850,7 +850,7 @@ class BaseLoggedInWindow(Toplevel):
 
         # insert wallet password label AND entry
         password_label = ttk.Label(self.wallet_creation_frame, text="Choose A Password:", background="#181e23",
-                                   foreground="white", font=form_label_font)
+                                   foreground="#c2c5ce", font=form_label_font)
         password_label.grid(row=3, sticky=N)
         password_label.grid_configure(padx=get_padx(self.wallet_creation_frame, password_label))
 
@@ -863,7 +863,7 @@ class BaseLoggedInWindow(Toplevel):
 
         # insert re_entry wallet password label AND entry
         password1_label = ttk.Label(self.wallet_creation_frame, text="Re_Enter Password:", background="#181e23",
-                                   foreground="white", font=form_label_font)
+                                   foreground="#c2c5ce", font=form_label_font)
         password1_label.grid(row=5, sticky=N)
         password1_label.grid_configure(padx=get_padx(self.wallet_creation_frame, password1_label))
 
@@ -919,7 +919,7 @@ class BaseLoggedInWindow(Toplevel):
 
         # insert wallet nickname label and Entry
         nickname_label = ttk.Label(self.load_wallet_frame, text="Wallet Nickname:", background="#181e23",
-                                   foreground="white", font=form_label_font)
+                                   foreground="#c2c5ce", font=form_label_font)
         nickname_label.grid(row=1, sticky=N)
         nickname_label.grid_configure(padx=get_padx(self.load_wallet_frame, nickname_label))
 
@@ -931,7 +931,7 @@ class BaseLoggedInWindow(Toplevel):
 
         # insert wallet password label AND entry
         password_label = ttk.Label(self.load_wallet_frame, text="Wallet Password:", background="#181e23",
-                                   foreground="white", font=form_label_font)
+                                   foreground="#c2c5ce", font=form_label_font)
         password_label.grid(row=3, sticky=N)
         password_label.grid_configure(padx=get_padx(self.load_wallet_frame, password_label))
 
@@ -1184,7 +1184,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             connect_info_frame,
             text="Active Peers: {}".format(len(WSCLI.dict_of_active)),
             background="#181e23",
-            foreground="white",
+            foreground="#c2c5ce",
             font=connection_top_label
         )
         connection_label.grid(row=0, column=0, sticky=(E, S))
@@ -1223,7 +1223,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
                                         client_user.wallet_service_instance.wallet_instance.get_wallet_id()
                                     ),
                                     background="#181e23",
-                                    foreground="white",
+                                    foreground="#c2c5ce",
                                     font=main_menu_top_label)
         wallet_id_label.grid(column=0, row=0, sticky=(W, S))
         root.update()
@@ -1384,7 +1384,7 @@ ttk_style.configure("logout.TButton", background="#3f5ac6", foreground="black",
                     font=("Courier", 16, "bold"))
 ttk_style.configure("submit.TButton", background="#43A26E", foreground="black", font=("Courier", 16, "bold"))
 
-ttk_style.configure("link.TButton", background="#303335", foreground="#c2c5cesa",
+ttk_style.configure("link.TButton", background="#303335", foreground="#c2c5ce",
                     font=("Courier", 16, "bold"), relief="flat")
 ttk_style.map(
     "link.TButton",
