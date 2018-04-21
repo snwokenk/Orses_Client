@@ -1025,7 +1025,11 @@ class BaseLoggedInWindow(Toplevel):
 
     def undo_change_left_frame_top_mid(self, left_frame_top_mid, main_menu_frame):
 
+
+        # destroy the main menue frame
         main_menu_frame.destroy()
+
+        # destroy the "unload wallet button, and put back the load wallet, create wallet and list wallet button
         for i in left_frame_top_mid.winfo_children():
             print("child: ", i, type(i))
             if isinstance(i, ttk.Button):
@@ -1249,20 +1253,20 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         root.update()
 
         # first canvas button "Send Tokens"
-        snd_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Send\nTokens", color="#33434f")
+        snd_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Send Tokens", color="#33434f")
         snd_tkn_canvas_btn.grid(row=0, column=0)
 
         # second canvas buton "Receive Tokens"
-        rcv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Receive\nTokens", color="#26313a")
+        rcv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Receive Tokens", color="#26313a")
         rcv_tkn_canvas_btn.grid(row=0, column=1)
 
         # 3rd canvas button "Validate Balance"
-        validate_balance_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Validate\nBalance",
+        validate_balance_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Validate Balance",
                                                        color="#26313a")
         validate_balance_canvas_btn.grid(row=1, column=0)
 
         # 4th canvas button "Reserve Token"
-        rsv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Reserve\nTokens", color="#33434f")
+        rsv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Reserve Tokens", color="#33434f")
         rsv_tkn_canvas_btn.grid(row=1, column=1)
 
 
@@ -1312,9 +1316,9 @@ class ButtonLikeCanvas(Canvas):
         assert isinstance(master, (Canvas, ttk.Frame, Frame, Toplevel, Tk)), "not proper master"
         self["width"] = int(master.winfo_width()/4)
         self["height"] = int(master.winfo_width()/4)
-        self["relief"] = "raised"
+        self["relief"] = "flat"
         self["background"] = "#2d3e4c" if color is None else color
-        self["borderwidth"] = 2
+        self["borderwidth"] = 0
         self["highlightthickness"] = 0
         self["highlightcolor"] = color if color else self["highlightcolor"]
 
@@ -1324,8 +1328,11 @@ class ButtonLikeCanvas(Canvas):
 
         self.text = text
         self.image = image
-        self.create_text(90, 80, text=text, justify=CENTER, anchor=CENTER,
-                         font=font.Font(family="Times", size=16, weight="bold"), fill="white")
+        self.text_id = self.create_text(90, 80, text=text, justify=CENTER, anchor=CENTER,
+                                        font=font.Font(family="Times", size=13, weight="normal"), fill="white")
+        self.line_coord = self.bbox(self.text_id)
+        self.line_id = self.create_line(self.line_coord[0], self.line_coord[3]+2, self.line_coord[2], self.line_coord[3]+2,
+                                        fill="#42a1f4", width=3)
         self.command = command
 
         self.bind("<Button-1>", self.__pressed)
@@ -1334,21 +1341,23 @@ class ButtonLikeCanvas(Canvas):
 
     def __pressed(self, event):
 
-        print(self["relief"], "\n", event)
+        print(self["relief"], "\n", event, self.text_id, self.bbox(self.text_id))
         self["relief"] = "sunken"
         # print(self.bbox(1))
-        self.move(1, 1, 1)  # used to moved create_text id right and down 1 pixel (simulates button moving)
+        self.move(self.text_id, 1, 1)  # used to moved create_text id right and down 1 pixel (simulates button moving)
+        self.move(self.line_id, 1, 1)
 
     def __pressed_released(self, event):
 
         print("button released", "\n", event)
         self["relief"] = "raised"
         # print(self.bbox(1))
-        self.move(1, -1, -1)  # used to moved create_text id left and up 1 pixel (simulates button moving)
+        self.move(self.text_id, -1, -1)  # used to moved create_text id left and up 1 pixel (simulates button moving)
+        self.move(self.line_id, -1, -1)
         if callable(self.command):
             self.command()
         else:
-            print("command argument must be a callable ie. function")
+            print("command argument must be a callable ie. function\n------\n")
 
 
 
