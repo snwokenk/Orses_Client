@@ -580,10 +580,12 @@ class BaseLoggedInWindow(Toplevel):
         self.password_text = StringVar()
         self.password1_text = StringVar()
 
-        # wallet load frame from None until Load A Wallet button pressed
+        # wallet load frame None until Load A Wallet button pressed
         self.load_wallet_frame = None
         self.load_nickname_text = StringVar()
         self.load_password_text = StringVar()
+
+
 
     # inside a frame at top of self.left_frame on row o
     def insert_user_logout_quit_buttons(self):
@@ -758,8 +760,6 @@ class BaseLoggedInWindow(Toplevel):
         self.notebookwidget.select(self.wallet_creation_frame)
 
 
-
-
         # insert header title "Create A Wallet"
         header_label = ttk.Label(self.wallet_creation_frame, text="Create A Wallet", background="#181e23",
                                  foreground="white", font=welcome_font)
@@ -908,7 +908,7 @@ class BaseLoggedInWindow(Toplevel):
         self.notebookwidget.add(self.load_wallet_frame, text="Load A Wallet")
         self.notebookwidget.select(self.load_wallet_frame)
 
-        # insert header title "Create A Wallet"
+        # insert header title "Load A Wallet"
         header_label = ttk.Label(self.load_wallet_frame, text="Load A Wallet", background="#181e23",
                                  foreground="white", font=welcome_font)
         header_label.grid(row=0)
@@ -955,6 +955,7 @@ class BaseLoggedInWindow(Toplevel):
         cancel_submit_frame.columnconfigure(0, weight=1)
         cancel_submit_frame.columnconfigure(1, weight=1)
 
+        # insert cancel button
         cancel_button_width = int(self.load_wallet_frame.winfo_width()*0.015)
         cancel_button = ttk.Button(cancel_submit_frame, text="CANCEL", width=cancel_button_width,
                                    command=lambda: (self.load_wallet_frame.destroy(), self.load_nickname_text.set(""),
@@ -990,6 +991,123 @@ class BaseLoggedInWindow(Toplevel):
                 self.change_left_frame_top_mid(left_frame_top_mid, main_menu_frame),
                 print(client_user)
             ),
+            default="active",
+            style="submit.TButton"
+        )
+        submit_button.grid(row=0, column=1, sticky=E)
+        self.bind('<Return>', lambda event: submit_button.invoke())
+        self.bind('<KP_Enter>', lambda event: submit_button.invoke())
+
+    def add_send_token_form_frame(self):
+        """
+        This method when called will start a new tab in after "send token" is clicked which allows users
+        to send input wallet address, tokens, fees (required minimum) and wallet password to send tokens
+        :return:
+        """
+        # todo: FINISH UP
+
+        if self.send_token_form_frame in self.notebookwidget.winfo_children():
+            self.notebookwidget.select(self.send_token_form_frame)
+            print("Already Created")
+            return None
+
+        self.send_token_form_frame = ttk.Frame(
+            self.notebookwidget,
+            style="middle.TFrame",
+            width=self.middle_frame_width,
+            height=self.middle_frame_height
+        )
+        self.send_token_form_frame.grid_propagate(False)
+
+        self.notebookwidget.add(self.send_token_form_frame, text="Send Tokens")
+        self.notebookwidget.select(self.send_token_form_frame)
+
+        # insert header title "Send Tokens"
+        header_label = ttk.Label(self.send_token_form_frame, text="Send Tokens", background="#181e23",
+                                 foreground="white", font=welcome_font)
+        header_label.grid(row=0)
+        root.update()
+        header_label_padx = int((self.send_token_form_frame.winfo_width() - header_label.winfo_width())/2)
+        header_label_pady = (int(self.send_token_form_frame.winfo_height() * 0.1),
+                             int(self.send_token_form_frame.winfo_height() * 0.05))
+        header_label.grid_configure(padx=header_label_padx, pady=header_label_pady)
+
+        # insert wallet addr label and Entry
+        wallet_addr_label = ttk.Label(self.send_token_form_frame, text="Receiving Wallet Address:", background="#181e23",
+                                   foreground="#c2c5ce", font=form_label_font)
+        wallet_addr_label.grid(row=1, sticky=N)
+        wallet_addr_label.grid_configure(padx=get_padx(self.send_token_form_frame, wallet_addr_label))
+
+        wallet_addr_entry =ttk.Entry(self.send_token_form_frame, textvariable=self.wallet_address_text, width=40, takefocus=True)
+        wallet_addr_entry.grid(row=2, sticky=S)
+        wallet_addr_entry.grid_configure(padx=get_padx(self.send_token_form_frame, wallet_addr_entry),
+                                      pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
+        wallet_addr_entry.focus()
+
+        # insert Amount Label and Entry
+        send_amount_label = ttk.Label(self.send_token_form_frame, text="Amount:", background="#181e23",
+                                      foreground="#c2c5ce", font=form_label_font)
+        send_amount_label.grid(row=3, sticky=N)
+        send_amount_label.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_label))
+
+        send_amount_entry = ttk.Entry(self.send_token_form_frame, textvariable=self.send_amount_float, width=40)
+        send_amount_entry.grid(row=4, sticky=S)
+        send_amount_entry.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_entry),
+                                         pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
+
+        # insert Fee amount Label and Entry
+        send_amount_fee_label = ttk.Label(self.send_token_form_frame, text="Amount:", background="#181e23",
+                                      foreground="#c2c5ce", font=form_label_font)
+        send_amount_fee_label.grid(row=5, sticky=N)
+        send_amount_fee_label.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_fee_label))
+
+        send_amount_fee_entry = ttk.Entry(self.send_token_form_frame, textvariable=self.send_amount_fee_float, width=40)
+        send_amount_fee_entry.grid(row=6, sticky=S)
+        send_amount_fee_entry.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_fee_entry),
+                                         pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
+
+        # insert wallet password label AND entry
+        password_label = ttk.Label(self.send_token_form_frame, text="Wallet Password:", background="#181e23",
+                                   foreground="#c2c5ce", font=form_label_font)
+        password_label.grid(row=7, sticky=N)
+        password_label.grid_configure(padx=get_padx(self.send_token_form_frame, password_label))
+
+        password_entry =ttk.Entry(self.send_token_form_frame, textvariable=self.wallet_password_text, width=40,
+                                  takefocus=False, show="*")
+        password_entry.grid(row=8, sticky=S)
+        password_entry.grid_configure(padx=get_padx(self.send_token_form_frame, password_entry),
+                                      pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
+
+
+
+        # insert cancel and submit buttons first
+        cancel_submit_frame = ttk.Frame(self.send_token_form_frame, style="middle.TFrame",
+                                        width=int(self.send_token_form_frame.winfo_width()*0.39), height=27, relief="sunken")
+        cancel_submit_frame.grid(row=9)
+        cancel_submit_frame.grid_propagate(False)
+        root.update()  # call this to update event loop of cancel_submit_frame new width and height
+        cancel_submit_frame.grid_configure(
+            padx=int((self.send_token_form_frame.winfo_width() - cancel_submit_frame.winfo_width())/2),
+            pady=int(self.send_token_form_frame.winfo_height()*.025)
+        )
+        cancel_submit_frame.columnconfigure(0, weight=1)
+        cancel_submit_frame.columnconfigure(1, weight=1)
+
+        # insert cancel button
+        cancel_button_width = int(self.send_token_form_frame.winfo_width()*0.015)
+        cancel_button = ttk.Button(cancel_submit_frame, text="CANCEL", width=cancel_button_width,
+                                   command=lambda: (self.send_token_form_frame.destroy(), self.wallet_address_text.set(""),
+                                                    self.send_amount_float.set(0.0),
+                                                    self.send_amount_fee_float.set(0.0),
+                                                    self.wallet_password_text.set("")),
+                                   style="cancel.TButton")
+        cancel_button.grid(row=0, column=0, sticky=W)
+
+        submit_button = ttk.Button(
+            cancel_submit_frame,
+            text="SEND",
+            width=cancel_button_width,
+            command=lambda: print('submited'),
             default="active",
             style="submit.TButton"
         )
@@ -1069,6 +1187,14 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.top_frame = ttk.Frame(self)
         self.middle_Frame = ttk.Frame(self)
         self.lower_frame = ttk.Frame(self)
+        self.notebookwidget = master
+
+        # send token form frame None until Send Tokens button pressed
+        self.send_token_form_frame = None
+        self.wallet_address_text = StringVar()
+        self.send_amount_float = DoubleVar()
+        self.send_amount_fee_float = DoubleVar()
+        self.wallet_password_text = StringVar()
 
     def insert_frame_based_on_created_loaded_client_wallet(self, created=True):
         if client_wallet:
@@ -1253,7 +1379,8 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         root.update()
 
         # first canvas button "Send Tokens"
-        snd_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Send Tokens", color="#33434f")
+        snd_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Send Tokens", color="#33434f",
+                                              command=lambda: self.add_send_token_form_frame())
         snd_tkn_canvas_btn.grid(row=0, column=0)
 
         # second canvas buton "Receive Tokens"
@@ -1268,7 +1395,6 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         # 4th canvas button "Reserve Token"
         rsv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Reserve Tokens", color="#33434f")
         rsv_tkn_canvas_btn.grid(row=1, column=1)
-
 
 
     # if wallet not created (false or none)
@@ -1304,6 +1430,123 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
 
         self.bind('<Return>', lambda event: continue_button.invoke())
         self.bind('<KP_Enter>', lambda event: continue_button.invoke())
+
+    def add_send_token_form_frame(self):
+        """
+        This method when called will start a new tab in after "send token" is clicked which allows users
+        to send input wallet address, tokens, fees (required minimum) and wallet password to send tokens
+        :return:
+        """
+        # todo: FINISH UP
+
+        if self.send_token_form_frame in self.notebookwidget.winfo_children():
+            self.notebookwidget.select(self.send_token_form_frame)
+            print("Already Created")
+            return None
+
+        self.send_token_form_frame = ttk.Frame(
+            self.notebookwidget,
+            style="middle.TFrame",
+            width=self.lower_frame.winfo_width(),
+            height=self.lower_frame_height
+        )
+        self.send_token_form_frame.grid_propagate(False)
+
+        self.notebookwidget.add(self.send_token_form_frame, text="Send Tokens")
+        self.notebookwidget.select(self.send_token_form_frame)
+
+        # insert header title "Send Tokens"
+        header_label = ttk.Label(self.send_token_form_frame, text="Send Tokens", background="#181e23",
+                                 foreground="white", font=welcome_font)
+        header_label.grid(row=0)
+        root.update()
+        header_label_padx = int((self.send_token_form_frame.winfo_width() - header_label.winfo_width())/2)
+        header_label_pady = (int(self.send_token_form_frame.winfo_height() * 0.1),
+                             int(self.send_token_form_frame.winfo_height() * 0.05))
+        header_label.grid_configure(padx=header_label_padx, pady=header_label_pady)
+
+        # insert wallet addr label and Entry
+        wallet_addr_label = ttk.Label(self.send_token_form_frame, text="Receiving Wallet Address:", background="#181e23",
+                                      foreground="#c2c5ce", font=form_label_font)
+        wallet_addr_label.grid(row=1, sticky=N)
+        wallet_addr_label.grid_configure(padx=get_padx(self.send_token_form_frame, wallet_addr_label))
+
+        wallet_addr_entry =ttk.Entry(self.send_token_form_frame, textvariable=self.wallet_address_text, width=40, takefocus=True)
+        wallet_addr_entry.grid(row=2, sticky=S)
+        wallet_addr_entry.grid_configure(padx=get_padx(self.send_token_form_frame, wallet_addr_entry),
+                                         pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
+        wallet_addr_entry.focus()
+
+        # insert Amount Label and Entry
+        send_amount_label = ttk.Label(self.send_token_form_frame, text="Amount:", background="#181e23",
+                                      foreground="#c2c5ce", font=form_label_font)
+        send_amount_label.grid(row=3, sticky=N)
+        send_amount_label.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_label))
+
+        send_amount_entry = ttk.Entry(self.send_token_form_frame, textvariable=self.send_amount_float, width=40)
+        send_amount_entry.grid(row=4, sticky=S)
+        send_amount_entry.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_entry),
+                                         pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
+
+        # insert Fee amount Label and Entry
+        send_amount_fee_label = ttk.Label(self.send_token_form_frame, text="Amount:", background="#181e23",
+                                          foreground="#c2c5ce", font=form_label_font)
+        send_amount_fee_label.grid(row=5, sticky=N)
+        send_amount_fee_label.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_fee_label))
+
+        send_amount_fee_entry = ttk.Entry(self.send_token_form_frame, textvariable=self.send_amount_fee_float, width=40)
+        send_amount_fee_entry.grid(row=6, sticky=S)
+        send_amount_fee_entry.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_fee_entry),
+                                             pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
+
+        # insert wallet password label AND entry
+        password_label = ttk.Label(self.send_token_form_frame, text="Wallet Password:", background="#181e23",
+                                   foreground="#c2c5ce", font=form_label_font)
+        password_label.grid(row=7, sticky=N)
+        password_label.grid_configure(padx=get_padx(self.send_token_form_frame, password_label))
+
+        password_entry =ttk.Entry(self.send_token_form_frame, textvariable=self.wallet_password_text, width=40,
+                                  takefocus=False, show="*")
+        password_entry.grid(row=8, sticky=S)
+        password_entry.grid_configure(padx=get_padx(self.send_token_form_frame, password_entry),
+                                      pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
+
+
+
+        # insert cancel and submit buttons first
+        cancel_submit_frame = ttk.Frame(self.send_token_form_frame, style="middle.TFrame",
+                                        width=int(self.send_token_form_frame.winfo_width()*0.39), height=27, relief="sunken")
+        cancel_submit_frame.grid(row=9)
+        cancel_submit_frame.grid_propagate(False)
+        root.update()  # call this to update event loop of cancel_submit_frame new width and height
+        cancel_submit_frame.grid_configure(
+            padx=int((self.send_token_form_frame.winfo_width() - cancel_submit_frame.winfo_width())/2),
+            pady=int(self.send_token_form_frame.winfo_height()*.025)
+        )
+        cancel_submit_frame.columnconfigure(0, weight=1)
+        cancel_submit_frame.columnconfigure(1, weight=1)
+
+        # insert cancel button
+        cancel_button_width = int(self.send_token_form_frame.winfo_width()*0.015)
+        cancel_button = ttk.Button(cancel_submit_frame, text="CANCEL", width=cancel_button_width,
+                                   command=lambda: (self.send_token_form_frame.destroy(), self.wallet_address_text.set(""),
+                                                    self.send_amount_float.set(0.0),
+                                                    self.send_amount_fee_float.set(0.0),
+                                                    self.wallet_password_text.set("")),
+                                   style="cancel.TButton")
+        cancel_button.grid(row=0, column=0, sticky=W)
+
+        submit_button = ttk.Button(
+            cancel_submit_frame,
+            text="SEND",
+            width=cancel_button_width,
+            command=lambda: print('submited'),
+            default="active",
+            style="submit.TButton"
+        )
+        submit_button.grid(row=0, column=1, sticky=E)
+        self.bind('<Return>', lambda event: submit_button.invoke())
+        self.bind('<KP_Enter>', lambda event: submit_button.invoke())
 
 
 class ButtonLikeCanvas(Canvas):
