@@ -586,7 +586,6 @@ class BaseLoggedInWindow(Toplevel):
         self.load_password_text = StringVar()
 
 
-
     # inside a frame at top of self.left_frame on row o
     def insert_user_logout_quit_buttons(self):
         left_frame_top_width = self.left_frame_width
@@ -1142,9 +1141,17 @@ class BaseLoggedInWindow(Toplevel):
             print("=======")
 
     def undo_change_left_frame_top_mid(self, left_frame_top_mid, main_menu_frame):
+        """
+        method is called to destroy main frame and then
+         restore buttons on left to "load a wallet", "create a wallet" "list owned wallets"
+        :param left_frame_top_mid: frame in which buttons were held
+        :param main_menu_frame: main frame with "send tokens" "validate balance" etc buttons
+        :return:
+        """
 
 
         # destroy the main menue frame
+        main_menu_frame.send_token_form_frame.destroy() if main_menu_frame.send_token_form_frame else None
         main_menu_frame.destroy()
 
         # destroy the "unload wallet button, and put back the load wallet, create wallet and list wallet button
@@ -1195,6 +1202,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.send_amount_float = DoubleVar()
         self.send_amount_fee_float = DoubleVar()
         self.wallet_password_text = StringVar()
+
 
     def insert_frame_based_on_created_loaded_client_wallet(self, created=True):
         if client_wallet:
@@ -1580,6 +1588,8 @@ class ButtonLikeCanvas(Canvas):
 
         self.bind("<Button-1>", self.__pressed)
         self.bind("<ButtonRelease-1>", lambda e: root.after(250, self.__pressed_released, e))
+        self.bind("<Enter>", self._entered_canvas)
+        self.bind("<Leave>", self._left_canvas)
 
 
     def __pressed(self, event):
@@ -1601,6 +1611,14 @@ class ButtonLikeCanvas(Canvas):
             self.command()
         else:
             print("command argument must be a callable ie. function\n------\n")
+
+    def _entered_canvas(self, event):
+        print('mouse entered', "\n", event)
+        self.itemconfig(self.line_id, width=5)
+
+    def _left_canvas(self, event):
+        print("mouse left", '\n', event)
+        self.itemconfig(self.line_id, width=3)
 
 
 
