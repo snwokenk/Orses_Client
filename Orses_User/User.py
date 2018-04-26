@@ -44,7 +44,7 @@ class User:
         self.__set_or_create_pki_pair()
         self.wallet_service_instance = WalletServices(client_id=self.client_id, user=self) if\
             self.client_id is not None else None
-        self.associated_wallet = self.wallet_service_instance.get_associated_wallet_ids() if \
+        self.associated_wallets = self.wallet_service_instance.get_associated_wallet_ids() if \
             self.wallet_service_instance is not None else None
 
 
@@ -90,7 +90,6 @@ class User:
         step1 = SHA256.new(self.pubkey).digest()
         return "ID-" + RIPEMD160.new(step1).hexdigest()
 
-
     def save_user(self):
         StoreData.store_user_info_in_db(client_id=self.client_id, pubkey=self.pubkey.hex(), username=self.username,
                                         timestamp_of_creation=self.creation_time)
@@ -106,7 +105,7 @@ class User:
             self.privkey = pki.load_priv_key(importedKey=True)
 
             self.wallet_service_instance = WalletServices(client_id=self.client_id, user=self)
-            self.associated_wallet = self.wallet_service_instance.get_associated_wallet_ids()
+            self.associated_wallets = self.wallet_service_instance.get_associated_wallet_ids()
 
         else:  # no user info, user not created
             return None
@@ -212,7 +211,7 @@ class User:
 
         # create wallet instance
         self.wallet_service_instance = WalletServices(client_id=self.client_id, user=self)
-        self.associated_wallet = self.wallet_service_instance.get_associated_wallet_ids()
+        self.associated_wallets = self.wallet_service_instance.get_associated_wallet_ids()
 
         # create database and save (will also create general client id and wallet id info database)
         CreateDatabase().create_user_db(self.username)
@@ -233,7 +232,7 @@ class User:
         :return: dict, details of newly created wallet or blank dict if nickname already used on local machine
         """
 
-        if wallet_nickname not in self.associated_wallet:
+        if wallet_nickname not in self.associated_wallets:
             is_created = self.wallet_service_instance.create_wallet(wallet_nickname=wallet_nickname, balance=50000000.0,
                                                                     client_id=self.client_id, locked_token=0.0,
                                                                     password=wallet_password)
@@ -256,11 +255,12 @@ class User:
         return None
 
     def get_list_of_owned_wallets(self):
-        list_of_wallets = self.wallet_service_instance.get_associated_wallet_ids()
+        list_of_wallets = self.associated_wallets
 
         if list_of_wallets:
             for i in list_of_wallets:
                 print("\nWallet Nickname: '{}' | Wallet ID: '{}'\n".format(i, list_of_wallets[i]))
+            return list_of_wallets
 
     def load_wallet(self, wallet_nickname, password):
         is_loaded =self.wallet_service_instance.load_a_wallet(wallet_nickname=wallet_nickname, password=password)

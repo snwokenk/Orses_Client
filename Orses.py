@@ -585,6 +585,9 @@ class BaseLoggedInWindow(Toplevel):
         self.load_nickname_text = StringVar()
         self.load_password_text = StringVar()
 
+        # list owned wallet frame None until "List Owned Wallet" button pressed
+        self.list_owned_wallet_frame = None
+
 
     # inside a frame at top of self.left_frame on row o
     def insert_user_logout_quit_buttons(self):
@@ -656,7 +659,7 @@ class BaseLoggedInWindow(Toplevel):
                              command=lambda: self.add_load_wallet_frame(left_frame_top_mid), text="Load A Wallet",
                              master_height=left_frame_top__mid_height)
         self.insert_btn_link(left_frame_top_mid, row=4, column=0, width=link_btn_width,
-                             command=lambda: print("Pushed"), text="List Owned Wallets",
+                             command=lambda: self.add_list_owned_wallets_frame(), text="List Owned Wallets",
                              master_height=left_frame_top__mid_height)
 
     def insert_market_options(self):
@@ -997,122 +1000,67 @@ class BaseLoggedInWindow(Toplevel):
         self.bind('<Return>', lambda event: submit_button.invoke())
         self.bind('<KP_Enter>', lambda event: submit_button.invoke())
 
-    def add_send_token_form_frame(self):
+    def add_list_owned_wallets_frame(self):
         """
-        This method when called will start a new tab in after "send token" is clicked which allows users
-        to send input wallet address, tokens, fees (required minimum) and wallet password to send tokens
+        used to create a frame listing owned wallets of User. List the wallet nickname and walled id
+        but not the balance
         :return:
         """
-        # todo: FINISH UP
-
-        if self.send_token_form_frame in self.notebookwidget.winfo_children():
-            self.notebookwidget.select(self.send_token_form_frame)
+        if self.list_owned_wallet_frame in self.notebookwidget.winfo_children():
+            self.notebookwidget.select(self.list_owned_wallet_frame)
             print("Already Created")
             return None
 
-        self.send_token_form_frame = ttk.Frame(
+        # create frame
+        self.list_owned_wallet_frame = ttk.Frame(
             self.notebookwidget,
             style="middle.TFrame",
             width=self.middle_frame_width,
             height=self.middle_frame_height
         )
-        self.send_token_form_frame.grid_propagate(False)
 
-        self.notebookwidget.add(self.send_token_form_frame, text="Send Tokens")
-        self.notebookwidget.select(self.send_token_form_frame)
+        # make frame maintain it's size, independently of children widgets in it
+        self.list_owned_wallet_frame.grid_propagate(False)
 
-        # insert header title "Send Tokens"
-        header_label = ttk.Label(self.send_token_form_frame, text="Send Tokens", background="#181e23",
-                                 foreground="white", font=welcome_font)
-        header_label.grid(row=0)
+        # add frame to notebookwidget
+        self.notebookwidget.add(self.list_owned_wallet_frame, text="Wallets Owned")
+
+        # select frame and make it displayed to user when created
+        self.notebookwidget.select(self.list_owned_wallet_frame)
+
+        # insert header title "Wallets Owned by {user}"
+        header_text = f'Wallets Owned by {client_user.username}:'
+        header_label = ttk.Label(self.list_owned_wallet_frame, text=header_text, justify="center",
+                                  style="welcome.TLabel", font=welcome_label_font)
+
+        header_label.grid(row=0, sticky=(N,S,E,W))
+
         root.update()
-        header_label_padx = int((self.send_token_form_frame.winfo_width() - header_label.winfo_width())/2)
-        header_label_pady = (int(self.send_token_form_frame.winfo_height() * 0.1),
-                             int(self.send_token_form_frame.winfo_height() * 0.05))
+        header_label_padx = int((self.list_owned_wallet_frame.winfo_width() - header_label.winfo_width())/2)
+        header_label_pady = (int(self.list_owned_wallet_frame.winfo_height() * 0.1),
+                             int(self.list_owned_wallet_frame.winfo_height() * 0.05))
+
+        # print("in list owned: wallet frame info: ", self.list_owned_wallet_frame.winfo_width(), header_label.winfo_width())
         header_label.grid_configure(padx=header_label_padx, pady=header_label_pady)
 
-        # insert wallet addr label and Entry
-        wallet_addr_label = ttk.Label(self.send_token_form_frame, text="Receiving Wallet Address:", background="#181e23",
-                                   foreground="#c2c5ce", font=form_label_font)
-        wallet_addr_label.grid(row=1, sticky=N)
-        wallet_addr_label.grid_configure(padx=get_padx(self.send_token_form_frame, wallet_addr_label))
+        list_of_wallets = list(client_user.associated_wallets.keys())
+        wallets_owned_strvar = StringVar(value=list_of_wallets)
+        print("list of wallets in list owned: ", list_of_wallets, wallets_owned_strvar.get())
 
-        wallet_addr_entry =ttk.Entry(self.send_token_form_frame, textvariable=self.wallet_address_text, width=40, takefocus=True)
-        wallet_addr_entry.grid(row=2, sticky=S)
-        wallet_addr_entry.grid_configure(padx=get_padx(self.send_token_form_frame, wallet_addr_entry),
-                                      pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
-        wallet_addr_entry.focus()
+        # height of listbox is number of rows, therefore should be at least number of wallets owned
+        height_of_listbox = len(list_of_wallets)+2
+        wallets_listbox = Listbox(self.list_owned_wallet_frame, height=height_of_listbox,
+                                  listvariable=wallets_owned_strvar, width=64)
+        wallets_listbox.grid(row=1)
 
-        # insert Amount Label and Entry
-        send_amount_label = ttk.Label(self.send_token_form_frame, text="Amount:", background="#181e23",
-                                      foreground="#c2c5ce", font=form_label_font)
-        send_amount_label.grid(row=3, sticky=N)
-        send_amount_label.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_label))
+        # update toplevel
+        root.update()
 
-        send_amount_entry = ttk.Entry(self.send_token_form_frame, textvariable=self.send_amount_float, width=40)
-        send_amount_entry.grid(row=4, sticky=S)
-        send_amount_entry.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_entry),
-                                         pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
+        wallet_listbox_padx = int((self.list_owned_wallet_frame.winfo_width() - wallets_listbox.winfo_width())/2)
+        wallet_listbox_pady = (int(self.list_owned_wallet_frame.winfo_height() * 0.1),
+                             int(self.list_owned_wallet_frame.winfo_height() * 0.05))
+        wallets_listbox.grid_configure(padx=wallet_listbox_padx, pady=wallet_listbox_pady)
 
-        # insert Fee amount Label and Entry
-        send_amount_fee_label = ttk.Label(self.send_token_form_frame, text="Amount:", background="#181e23",
-                                      foreground="#c2c5ce", font=form_label_font)
-        send_amount_fee_label.grid(row=5, sticky=N)
-        send_amount_fee_label.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_fee_label))
-
-        send_amount_fee_entry = ttk.Entry(self.send_token_form_frame, textvariable=self.send_amount_fee_float, width=40)
-        send_amount_fee_entry.grid(row=6, sticky=S)
-        send_amount_fee_entry.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_fee_entry),
-                                         pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
-
-        # insert wallet password label AND entry
-        password_label = ttk.Label(self.send_token_form_frame, text="Wallet Password:", background="#181e23",
-                                   foreground="#c2c5ce", font=form_label_font)
-        password_label.grid(row=7, sticky=N)
-        password_label.grid_configure(padx=get_padx(self.send_token_form_frame, password_label))
-
-        password_entry =ttk.Entry(self.send_token_form_frame, textvariable=self.wallet_password_text, width=40,
-                                  takefocus=False, show="*")
-        password_entry.grid(row=8, sticky=S)
-        password_entry.grid_configure(padx=get_padx(self.send_token_form_frame, password_entry),
-                                      pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
-
-
-
-        # insert cancel and submit buttons first
-        cancel_submit_frame = ttk.Frame(self.send_token_form_frame, style="middle.TFrame",
-                                        width=int(self.send_token_form_frame.winfo_width()*0.39), height=27, relief="sunken")
-        cancel_submit_frame.grid(row=9)
-        cancel_submit_frame.grid_propagate(False)
-        root.update()  # call this to update event loop of cancel_submit_frame new width and height
-        cancel_submit_frame.grid_configure(
-            padx=int((self.send_token_form_frame.winfo_width() - cancel_submit_frame.winfo_width())/2),
-            pady=int(self.send_token_form_frame.winfo_height()*.025)
-        )
-        cancel_submit_frame.columnconfigure(0, weight=1)
-        cancel_submit_frame.columnconfigure(1, weight=1)
-
-        # insert cancel button
-        cancel_button_width = int(self.send_token_form_frame.winfo_width()*0.015)
-        cancel_button = ttk.Button(cancel_submit_frame, text="CANCEL", width=cancel_button_width,
-                                   command=lambda: (self.send_token_form_frame.destroy(), self.wallet_address_text.set(""),
-                                                    self.send_amount_float.set(0.0),
-                                                    self.send_amount_fee_float.set(0.0),
-                                                    self.wallet_password_text.set("")),
-                                   style="cancel.TButton")
-        cancel_button.grid(row=0, column=0, sticky=W)
-
-        submit_button = ttk.Button(
-            cancel_submit_frame,
-            text="SEND",
-            width=cancel_button_width,
-            command=lambda: print('submited'),
-            default="active",
-            style="submit.TButton"
-        )
-        submit_button.grid(row=0, column=1, sticky=E)
-        self.bind('<Return>', lambda event: submit_button.invoke())
-        self.bind('<KP_Enter>', lambda event: submit_button.invoke())
 
     def change_left_frame_top_mid(self, left_frame_top_mid, main_menu_frame):
         global client_wallet
@@ -1202,6 +1150,8 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.send_amount_float = DoubleVar()
         self.send_amount_fee_float = DoubleVar()
         self.wallet_password_text = StringVar()
+
+        # reserve token form frame None until Reserve Tokens button pressed
 
 
     def insert_frame_based_on_created_loaded_client_wallet(self, created=True):
@@ -1497,7 +1447,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
                                          pady=(0,int(self.send_token_form_frame.winfo_height() * 0.05)))
 
         # insert Fee amount Label and Entry
-        send_amount_fee_label = ttk.Label(self.send_token_form_frame, text="Amount:", background="#181e23",
+        send_amount_fee_label = ttk.Label(self.send_token_form_frame, text="Fee:", background="#181e23",
                                           foreground="#c2c5ce", font=form_label_font)
         send_amount_fee_label.grid(row=5, sticky=N)
         send_amount_fee_label.grid_configure(padx=get_padx(self.send_token_form_frame, send_amount_fee_label))
@@ -1615,6 +1565,10 @@ class ButtonLikeCanvas(Canvas):
     def _entered_canvas(self, event):
         print('mouse entered', "\n", event)
         self.itemconfig(self.line_id, width=5)
+        print(client_wallet)
+        print(vars(client_user)) if client_user else print(client_user)
+        print()
+        print(vars(client_user.wallet_service_instance))
 
     def _left_canvas(self, event):
         print("mouse left", '\n', event)
