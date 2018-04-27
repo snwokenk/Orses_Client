@@ -1050,8 +1050,9 @@ class BaseLoggedInWindow(Toplevel):
         # height of listbox is number of rows, therefore should be at least number of wallets owned
         height_of_listbox = len(list_of_wallets)+2
         wallets_listbox = Listbox(self.list_owned_wallet_frame, height=height_of_listbox,
-                                  listvariable=wallets_owned_strvar, width=64)
+                                  listvariable=wallets_owned_strvar, width=64, font=("fixed", 12))
         wallets_listbox.grid(row=1)
+        print("wallet listbox font: ", wallets_listbox['font'])
 
         # update toplevel
         root.update()
@@ -1060,6 +1061,20 @@ class BaseLoggedInWindow(Toplevel):
         wallet_listbox_pady = (int(self.list_owned_wallet_frame.winfo_height() * 0.1),
                              int(self.list_owned_wallet_frame.winfo_height() * 0.05))
         wallets_listbox.grid_configure(padx=wallet_listbox_padx, pady=wallet_listbox_pady)
+
+
+        # insert close button
+        close_button_width = int(self.list_owned_wallet_frame.winfo_width()*0.055)
+        close_button = ttk.Button(self.list_owned_wallet_frame, text="CLOSE", width=close_button_width,
+                                  command=lambda: self.list_owned_wallet_frame.destroy(), style="cancel.TButton",
+                                  default="active")
+        close_button.grid(row=2, sticky=(N,S))
+        root.update()
+        x_axis = int((self.list_owned_wallet_frame.winfo_width() - close_button.winfo_width())/2)
+        close_button.grid_configure(padx=x_axis, pady=5)
+
+        self.bind('<Return>', lambda event: close_button.invoke())
+        self.bind('<KP_Enter>', lambda event: close_button.invoke())
 
 
     def change_left_frame_top_mid(self, left_frame_top_mid, main_menu_frame):
