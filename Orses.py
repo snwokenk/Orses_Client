@@ -230,7 +230,7 @@ class UserAndWalletCommands:
             # for widgets in window_inst.mainframe_lower.grid_slaves():
             #     print(widgets)
             WSCLI.set_user_instantiate_net_mgr(user=client_user)
-            pass
+
         elif client_user is False:
 
             # Wrong Password
@@ -243,7 +243,7 @@ class UserAndWalletCommands:
                 text_color="Red",
                 command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
             )
-            pass
+
         elif client_user is None:
             # No user by username found on Imported_Accounts Folder
             for widgets in window_inst.mainframe_lower.grid_slaves():
@@ -255,7 +255,62 @@ class UserAndWalletCommands:
                 text_color="Red",
                 command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
             )
-            pass
+
+    @staticmethod
+    def export_user(password, username, window_inst):
+        """
+        used to call User.export_user method and launch window according to
+        :param password: password of account
+        :param username: nickname of account
+        :param window_inst: instance of BaseFormWindow
+        :return:
+        """
+
+        global client_user
+
+        # can return false==wrong password, none==no user with username exists OR
+        # [user, path]== user was exported to file in path
+        client_user = UserCLI.export_user(username=username, password=password)
+
+        if client_user is None:
+            # user with username already exists
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "'{}' Does Not Exist On Local Machine!\n" \
+                         "User Not Exported".format(username)
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="red",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
+        elif client_user is False:
+            # Wrong Password
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "Incorrect Password!\n" \
+                         "User Not Exported"
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Red",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
+        elif client_user:
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = f"Success!\n'{client_user[0].username}' With Client ID:\n" \
+                         f"{client_user[0].client_id}\n" \
+                         f"Has Been Exported Into File\n" \
+                         f"{client_user[1]}"
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Green",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
+
+
 
 
     @staticmethod
@@ -351,7 +406,6 @@ class OrsesCommands:
         # Tells program destroy window and bring back up root (user login menu)
         create_user_window.protocol("WM_DELETE_WINDOW", lambda: (root.deiconify(), create_user_window.destroy()))
 
-
     @staticmethod
     def load_user():
         root.withdraw()
@@ -397,12 +451,29 @@ class OrsesCommands:
 
     @staticmethod
     def export_user():
+        root.withdraw()
         print("User Exported")
         export_user_window = BaseFormWindow(root, title="Orses Wallet Client: Export A User")
         windows_dict["export_user"] = export_user_window
 
         # row 0 Header "Create User" (should be space below, and Create User Underlined
         export_user_window.insert_header_title(title="Export A User", font_class=welcome_font)
+
+        export_user_window.insert_username(font_class=form_label_font)
+
+        export_user_window.insert_password(font_class=form_label_font)
+
+        export_user_window.insert_cancel_submit_buttons(
+            submit_text="LOAD",
+            button_state="!disabled",
+            command_callback=lambda: UserAndWalletCommands.export_user(
+                password=export_user_window.password_text.get(),
+                username=export_user_window.username_text.get(),
+                window_inst=export_user_window
+            )
+        )
+
+        export_user_window.protocol("WM_DELETE_WINDOW", lambda: (root.deiconify(), export_user_window.destroy()))
 
     @staticmethod
     def import_user():
@@ -572,7 +643,7 @@ class BaseFormWindow(Toplevel):
                                                                 username=self.username_text,
                                                                 button_instance=self.submit_button)
         )
-        password_entry.grid(row=next(self.mainframe_lower_row_number_generator), sticky=S)
+        password_entry.grid(row=self.mainframe_lower.next_row(), sticky=S)
         password_entry.grid_configure(padx=self.entry_padx, pady=self.entry_pady)
 
         print(password_entry["width"])
@@ -1223,6 +1294,7 @@ class BaseLoggedInWindow(Toplevel):
 
         # destroy the main menue frame
         main_menu_frame.send_token_form_frame.destroy() if main_menu_frame.send_token_form_frame else None
+        main_menu_frame.reserve_token_form_frame.destroy() if main_menu_frame.reserve_token_form_frame else None
         main_menu_frame.destroy()
 
         # destroy the "unload wallet button, and put back the load wallet, create wallet and list wallet button
@@ -1275,6 +1347,12 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.wallet_password_text = StringVar()
 
         # reserve token form frame None until Reserve Tokens button pressed
+        self.reserve_token_form_frame = None
+        self.reserve_amount_float = DoubleVar()
+        self.reserve_amount_fee_float = DoubleVar(value=1.0)
+        self.reserve_length_float = DoubleVar(value=30.0)
+        self.reservce_wallet_password_text = StringVar()
+
 
 
     def insert_frame_based_on_created_loaded_client_wallet(self, created=True):
@@ -1474,7 +1552,8 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         validate_balance_canvas_btn.grid(row=1, column=0)
 
         # 4th canvas button "Reserve Token"
-        rsv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Reserve Tokens", color="#33434f")
+        rsv_tkn_canvas_btn = ButtonLikeCanvas(frame_for_buttonlike_canvas, text="Reserve Tokens", color="#33434f",
+                                              command=lambda: self.add_reserve_token_form_frame())
         rsv_tkn_canvas_btn.grid(row=1, column=1)
 
 
@@ -1518,7 +1597,6 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         to send input wallet address, tokens, fees (required minimum) and wallet password to send tokens
         :return:
         """
-        # todo: FINISH UP
 
         if self.send_token_form_frame in self.notebookwidget.winfo_children():
             self.notebookwidget.select(self.send_token_form_frame)
@@ -1629,6 +1707,128 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.bind('<Return>', lambda event: submit_button.invoke())
         self.bind('<KP_Enter>', lambda event: submit_button.invoke())
 
+    def add_reserve_token_form_frame(self):
+
+        if self.reserve_token_form_frame in self.notebookwidget.winfo_children():
+            self.notebookwidget.select(self.reserve_token_form_frame)
+            print("Already Created")
+            return None
+
+        self.reserve_token_form_frame = FrameWithGeneratorRows(
+            self.notebookwidget,
+            style="middle.TFrame",
+            width=self.lower_frame.winfo_width(),
+            height=self.lower_frame_height
+        )
+
+        self.reserve_token_form_frame.grid_propagate(False)
+
+        self.notebookwidget.add(self.reserve_token_form_frame, text="Reserve Tokens")
+        self.notebookwidget.select(self.reserve_token_form_frame)
+
+        # insert header title "Reserve Tokens"
+        header_text = "Reserve Tokens\n" \
+                      "Become A Blockchain Connected Wallet"
+        header_label = ttk.Label(self.reserve_token_form_frame, text=header_text, background="#181e23",
+                                 foreground="white", font=welcome_font, justify="center")
+        header_label.grid(row=0)
+        root.update()
+        header_label_padx = int((self.reserve_token_form_frame.winfo_width() - header_label.winfo_width())/2)
+        header_label_pady = (int(self.reserve_token_form_frame.winfo_height() * 0.1),
+                             int(self.reserve_token_form_frame.winfo_height() * 0.05))
+        header_label.grid_configure(padx=header_label_padx, pady=header_label_pady)
+
+        # insert Reserve Amount Label and Entry
+        reserve_amount_text = "Amount. Min 250k:"
+        reserve_amount_label = ttk.Label(self.reserve_token_form_frame, text=reserve_amount_text, background="#181e23",
+                                      foreground="#c2c5ce", font=form_label_font)
+        reserve_amount_label.grid(row=1, sticky=N)
+        reserve_amount_label.grid_configure(padx=get_padx(self.reserve_token_form_frame, reserve_amount_label))
+
+        reserve_amount_entry = ttk.Entry(self.reserve_token_form_frame, textvariable=self.reserve_amount_float, width=40)
+        reserve_amount_entry.grid(row=2, sticky=S)
+        reserve_amount_entry.grid_configure(padx=get_padx(self.reserve_token_form_frame, reserve_amount_entry),
+                                         pady=(0, int(self.reserve_token_form_frame.winfo_height() * 0.05)))
+
+        # insert Fee Label and Entry
+
+        reserve_amount_fee_text = "Fee. min 1:"
+        reserve_amount_fee_label = ttk.Label(self.reserve_token_form_frame, text=reserve_amount_fee_text, background="#181e23",
+                                             foreground="#c2c5ce", font=form_label_font)
+        reserve_amount_fee_label.grid(row=3, sticky=N)
+        reserve_amount_fee_label.grid_configure(padx=get_padx(self.reserve_token_form_frame, reserve_amount_fee_label))
+
+        reserve_amount_fee_entry = ttk.Entry(self.reserve_token_form_frame, textvariable=self.reserve_amount_fee_float,
+                                             width=40)
+        reserve_amount_fee_entry.grid(row=4, sticky=S)
+        reserve_amount_fee_entry.grid_configure(padx=get_padx(self.reserve_token_form_frame, reserve_amount_fee_entry),
+                                                pady=(0, int(self.reserve_token_form_frame.winfo_height() * 0.05)))
+
+        # insert Reserve length
+
+        reserve_len_text = "Rsv Duration. min 30 days:"
+        reserve_len_label = ttk.Label(self.reserve_token_form_frame, text=reserve_len_text, background="#181e23",
+                                             foreground="#c2c5ce", font=form_label_font)
+        reserve_len_label.grid(row=5, sticky=N)
+        reserve_len_label.grid_configure(padx=get_padx(self.reserve_token_form_frame, reserve_len_label))
+
+        reserve_len_entry = ttk.Entry(self.reserve_token_form_frame, textvariable=self.reserve_length_float,
+                                             width=40)
+        reserve_len_entry.grid(row=6, sticky=S)
+        reserve_len_entry.grid_configure(padx=get_padx(self.reserve_token_form_frame, reserve_len_entry),
+                                                pady=(0, int(self.reserve_token_form_frame.winfo_height() * 0.05)))
+
+        # insert wallet password label AND entry
+        password_label = ttk.Label(self.reserve_token_form_frame, text="Wallet Password:", background="#181e23",
+                                   foreground="#c2c5ce", font=form_label_font)
+        password_label.grid(row=7, sticky=N)
+        password_label.grid_configure(padx=get_padx(self.reserve_token_form_frame, password_label))
+
+        password_entry =ttk.Entry(self.reserve_token_form_frame, textvariable=self.reservce_wallet_password_text, width=40,
+                                  takefocus=False, show="*")
+        password_entry.grid(row=8, sticky=S)
+        password_entry.grid_configure(padx=get_padx(self.reserve_token_form_frame, password_entry),
+                                      pady=(0,int(self.reserve_token_form_frame.winfo_height() * 0.05)))
+
+
+
+        # insert cancel and submit buttons first
+        cancel_submit_frame = ttk.Frame(self.reserve_token_form_frame, style="middle.TFrame",
+                                        width=int(self.reserve_token_form_frame.winfo_width()*0.39), height=27, relief="sunken")
+        cancel_submit_frame.grid(row=9)
+        cancel_submit_frame.grid_propagate(False)
+        root.update()  # call this to update event loop of cancel_submit_frame new width and height
+        cancel_submit_frame.grid_configure(
+            padx=int((self.reserve_token_form_frame.winfo_width() - cancel_submit_frame.winfo_width())/2),
+            pady=int(self.reserve_token_form_frame.winfo_height()*.025)
+        )
+        cancel_submit_frame.columnconfigure(0, weight=1)
+        cancel_submit_frame.columnconfigure(1, weight=1)
+
+        # insert cancel button
+        cancel_button_width = int(self.reserve_token_form_frame.winfo_width()*0.015)
+        cancel_button = ttk.Button(cancel_submit_frame, text="CANCEL", width=cancel_button_width,
+                                   command=lambda: (self.reserve_token_form_frame.destroy(), self.wallet_address_text.set(""),
+                                                    self.reserve_amount_float.set(0.0),
+                                                    self.reserve_amount_fee_float.set(0.0),
+                                                    self.reserve_length_float.set(0.0),
+                                                    self.wallet_password_text.set("")),
+                                   style="cancel.TButton")
+        cancel_button.grid(row=0, column=0, sticky=W)
+
+        submit_button = ttk.Button(
+            cancel_submit_frame,
+            text="SEND",
+            width=cancel_button_width,
+            command=lambda: print('submited'),
+            default="active",
+            style="submit.TButton"
+        )
+        submit_button.grid(row=0, column=1, sticky=E)
+        self.bind('<Return>', lambda event: submit_button.invoke())
+        self.bind('<KP_Enter>', lambda event: submit_button.invoke())
+
+
 
 class ButtonLikeCanvas(Canvas):
     """
@@ -1700,7 +1900,7 @@ class ButtonLikeCanvas(Canvas):
 
 class FrameWithGeneratorRows(ttk.Frame):
     """
-    frame automatically generates the proper next row
+    frame automatically generates the proper next row number
     Use if you are adding widgets into frame sequentially.
     """
     def __init__(self, master, **kw):

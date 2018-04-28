@@ -125,7 +125,7 @@ class User:
 
         pki = PKI(username=self.username, password=self.password)
         exp_path = os.path.join(pathlib.Path.home(), "Desktop", "CryptoHub_External_Files", "Exported_Accounts",
-                                self.username + ".cryptohub")
+                                self.username + ".orses")
 
         FileAction.create_folder("Exported_Accounts")
 
@@ -156,7 +156,7 @@ class User:
         """
 
         imp_path = os.path.join(pathlib.Path.home(), "Desktop", "CryptoHub_External_Files", "Imported_Accounts",
-                                self.username + ".cryptohub")
+                                self.username + ".orses")
 
 
 

@@ -30,43 +30,28 @@ class UserCLI:
         return user
 
     @staticmethod
-    def export_user():
+    def export_user(username, password):
         """
         takes private key, public key files and user info database files, and puts in a folder on the desktop
         :return:
         """
+        user = User(username=username, password=password, newUser=False).load_user()
 
-        call("clear")
-        print("\n\n*** The Command Line Interface Of The CryptoHub Blockchain Client ***\n\n")
+        if user:
+            rsp = user.export_user()
+            if rsp:
+                # path that
+                path1 = os.path.join(pathlib.Path.home(), "Desktop", "CryptoHub_External_Files",
+                                     "Exported_Accounts", user.username + ".orses")
+                return [user, path1]
 
-        print("Export User")
+        elif user is False:
+            return user
 
-        username = input("Username: ")
+        elif user is None:
+            return None
 
-        while True:
-            password = getpass.getpass("Password: ")
 
-            user = User(username=username, password=password, newUser=False).load_user()
-
-            if user:
-                print("User: {} loaded\n".format(user.username))
-                print("client_id: {}. creation_time: {}".format(user.client_id, user.creation_time))
-                ans = input("Export This User? y/n")
-                if ans.upper() == "Y":
-                    rsp = user.export_user()
-                    if rsp:
-                        print("{} has been exported to:  \n".format(user.username))
-                        path1 = os.path.join(pathlib.Path.home(), "Desktop", "CryptoHub_External_Files",
-                                             "Exported_Accounts", user.username + ".cryptohub")
-                        print(path1, "\n")
-
-            elif user is False:
-                print("Wrong Password!\n")
-
-            elif user is None:
-                print("No User By That Name\n")
-
-            break
 
         input("Press Enter To Continue")
         call("clear")
