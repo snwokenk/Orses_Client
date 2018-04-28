@@ -72,65 +72,59 @@ class UserCLI:
         call("clear")
 
     @staticmethod
-    def import_user():
+    def import_user(password, username, alt_username=None):
         """
         finds file with public key, private key files and user info database files and puts them in path for use
         :return:
         """
         FileAction.create_folder("Imported_Accounts")
 
-        call("clear")
-        print("\n\n*** The Command Line Interface Of The CryptoHub Blockchain Client ***\n\n")
-
-        print("Import User")
-
-        username = input("Username: ")
-
-        password = getpass.getpass("Password: ")
-        prev_user= False
         try:
-            user = User(username=username, password=password, newUser=False).import_user()
+            user = User(username=username, password=password, newUser=False).import_user(
+                different_username=alt_username
+            )
         except Exception as e:
             if e.args:
 
                 print(e.args[0])
                 if e.args[0] == "User With Username '{}' Already Exists".format(username):
-                    choice = input("Would You Like To Save Imported User Under A New Username? y/n")
-                    if choice.lower() == "y":
-                        while True:
-                            username1 = input("Alternate Username: ")
-                            if username == username1:
-                                print("Alternate Same As Original. Choose An Alternate Name")
-                                continue
-                            break
-                        user = User(username=username, password=password, newUser=False).import_user(
-                            different_username=username1)
-                        if user:
-                            print("User: '{}' imported as '{}'\n".format(username, user.username))
-                            print("client_id: {}. creation_time: {}\n".format(user.client_id, user.creation_time))
-                        elif user is False:
-                            print("Wrong Password!\n")
-                        elif user is None:
-                            print("User With The Same Username Already Exists!\n")
-
-                    else:
-                        user = None
+                    user = "already exists"
+                    # choice = input("Would You Like To Save Imported User Under A New Username? y/n")
+                    # if choice.lower() == "y":
+                    #     while True:
+                    #         username1 = input("Alternate Username: ")
+                    #         if username == username1:
+                    #             print("Alternate Same As Original. Choose An Alternate Name")
+                    #             continue
+                    #         break
+                    #     user = User(username=username, password=password, newUser=False).import_user(
+                    #         different_username=username1)
+                    #     if user:
+                    #         print("User: '{}' imported as '{}'\n".format(username, user.username))
+                    #         print("client_id: {}. creation_time: {}\n".format(user.client_id, user.creation_time))
+                    #     elif user is False:
+                    #         print("Wrong Password!\n")
+                    #     elif user is None:
+                    #         print("User With The Same Username Already Exists!\n")
+                    #
+                    # else:
+                    #     user = None
                 else:
+                    print(e)
                     user = None
+            else:
+                user = None
 
-        else:
-            if user:
-                print("User: {} imported\n".format(user.username))
-                print("client_id: {}. creation_time: {}".format(user.client_id, user.creation_time))
-            elif user is False:
-                print("Wrong Password!\n")
 
-            elif user is None:
-                print("No User By That Name\n")
-        finally:
-            input("Press Enter To Continue")
-            call("clear")
+        # if user:
+        #     print("User: {} imported\n".format(user.username))
+        #     print("client_id: {}. creation_time: {}".format(user.client_id, user.creation_time))
+        # elif user is False:
+        #     print("Wrong Password!\n")
+        #
+        # elif user is None:
+        #     print("No User By That Name\n")
 
-            print(user)
+        print(user)
 
-            return user
+        return user

@@ -77,6 +77,15 @@ def get_padx(master, child):
     root.update()
     return int((master.winfo_width() - child.winfo_width())/2)
 
+
+def generate_row_number():
+    gen_num = 0
+
+    while True:
+        yield gen_num
+        gen_num += 1
+
+
 """
 end needed functions
 """
@@ -187,6 +196,69 @@ class UserAndWalletCommands:
             )
 
     @staticmethod
+    def import_user(password, username, alt_username, window_inst):
+        global client_user
+        if alt_username in {"", "Alt. Nickname For User(optional)"}:
+            alt_username = None
+
+        client_user = UserCLI.import_user(password=password, username=username, alt_username=alt_username)
+
+        if client_user == "already exists":
+            # User with same username already exists on local machine
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "User With The Same Username Already Exists On This Computer!\n" \
+                         "Set A different Username By Entering An Alternate Username"
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Red",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
+
+        elif isinstance(client_user, User):
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "Success!\n'{}' Imported And Loaded On Local Machine!\nClient ID:\n{}".format(client_user.username,
+                                                                                          client_user.client_id)
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Green",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
+            # for widgets in window_inst.mainframe_lower.grid_slaves():
+            #     print(widgets)
+            WSCLI.set_user_instantiate_net_mgr(user=client_user)
+            pass
+        elif client_user is False:
+
+            # Wrong Password
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "Incorrect Password!"
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Red",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
+            pass
+        elif client_user is None:
+            # No user by username found on Imported_Accounts Folder
+            for widgets in window_inst.mainframe_lower.grid_slaves():
+                widgets.grid_forget()
+            valid_text = "No User By That Name In Imported_Accounts folder"
+            window_inst.insert_notification_label(
+                text=valid_text,
+                font_class=notif_label_font,
+                text_color="Red",
+                command_callback=lambda: UserAndWalletCommands.launch_main_menu(user=client_user, window_inst=window_inst)
+            )
+            pass
+
+
+    @staticmethod
     def create_wallet(wallet_nickname, wallet_password, wallet_password1):
 
         global client_wallet
@@ -222,7 +294,7 @@ class UserAndWalletCommands:
         """
 
 
-        if user:
+        if isinstance(user, User):
             window_inst.destroy()
 
             main_menu_window = BaseLoggedInWindow(root, "Orses Wallet Client: MAIN MENU", client_user=user)
@@ -334,12 +406,32 @@ class OrsesCommands:
 
     @staticmethod
     def import_user():
+        root.withdraw()
         print("User Imported")
         import_user_window = BaseFormWindow(root, title="Orses Wallet Client: Import A User")
         windows_dict["import_user"] = import_user_window
 
         # row 0 Header "Create User" (should be space below, and Create User Underlined
         import_user_window.insert_header_title(title="Import A User", font_class=welcome_font)
+
+        import_user_window.insert_username(font_class=form_label_font)
+
+        import_user_window.insert_alternate_username(font_class=form_label_font)
+
+        import_user_window.insert_password(font_class=form_label_font)
+
+        import_user_window.insert_cancel_submit_buttons(
+            submit_text="LOAD",
+            button_state="!disabled",
+            command_callback=lambda: UserAndWalletCommands.import_user(
+                password=import_user_window.password_text.get(),
+                username=import_user_window.username_text.get(),
+                alt_username=import_user_window.alt_username_text.get(),
+                window_inst=import_user_window
+            )
+        )
+
+        import_user_window.protocol("WM_DELETE_WINDOW", lambda: (root.deiconify(), import_user_window.destroy()))
 
     @staticmethod
     def enable_submit(**kw):
@@ -387,20 +479,23 @@ class BaseFormWindow(Toplevel):
         # create standard top frame for form windows
         self.mainframe_top = ttk.Frame(self.mainframe, width=self.form_window_width,
                                        height=int(self.form_window_height*0.15), style="top.TFrame")
+
         self.mainframe_top.grid(column=0, row=0, sticky=(N, S, E, W))
         self.mainframe_top.grid_propagate(False)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self._insert_logo()
         self.mainframe_lower_height = int(self.form_window_height*0.86)
-        self.mainframe_lower = ttk.Frame(self.mainframe, width=self.form_window_width,
+        self.mainframe_lower = FrameWithGeneratorRows(self.mainframe, width=self.form_window_width,
                                          height=self.mainframe_lower_height, style="lower.TFrame")
+        self.mainframe_lower_row_number_generator = generate_row_number()
         self.mainframe_lower.grid(column=0, row=1, sticky=(N, S, E, W))
         self.mainframe_lower.grid_propagate(False)
         self.rowconfigure(1, weight=1)
 
         # Entry Text
         self.username_text = StringVar(value="")
+        self.alt_username_text = StringVar(value="Alt. Nickname For User(optional)")
         self.password_text = StringVar(value="")
         self.password1_text = StringVar(value="")
         self.entry_padx = (int(self.form_window_width*0.31), 0)
@@ -423,30 +518,43 @@ class BaseFormWindow(Toplevel):
                        int(self.mainframe_lower_height*0.05))
         header_label = ttk.Label(self.mainframe_lower, text=title, background=background_color,
                                  foreground=text_color, font=font_class)
-        header_label.grid(row=0, sticky=N)
+        header_label.grid(row=self.mainframe_lower.next_row(), sticky=N)
         header_label.grid_configure(padx=header_padx, pady=header_pady)
 
     def insert_username(self, font_class, label_text="username:", background_color="#20262b", text_color="#c2c5ce"):
 
         username_label = ttk.Label(self.mainframe_lower, text=label_text, background=background_color,
                                    foreground=text_color, font=font_class)
-        username_label.grid(row=1, sticky=N)
+        username_label.grid(row=self.mainframe_lower.next_row(), sticky=N)
         username_label.grid_configure(padx=self.entry_padx)
 
         username_entry =ttk.Entry(self.mainframe_lower, textvariable=self.username_text, width=36, takefocus=True)
-        username_entry.grid(row=2, sticky=S)
+        username_entry.grid(row=self.mainframe_lower.next_row(), sticky=S)
         username_entry.grid_configure(padx=self.entry_padx, pady=self.entry_pady)
         username_entry.focus()
+
+    def insert_alternate_username(self, font_class, label_text="Alt. Username", background_color="#20262b", text_color="#c2c5ce"):
+
+        username_label = ttk.Label(self.mainframe_lower, text=label_text, background=background_color,
+                                   foreground=text_color, font=font_class)
+        username_label.grid(row=self.mainframe_lower.next_row(), sticky=N)
+        username_label.grid_configure(padx=self.entry_padx)
+
+        username_entry =ttk.Entry(self.mainframe_lower, textvariable=self.alt_username_text, width=36,
+                                  takefocus=True, validate="focusin",
+                                  validatecommand=lambda: self.alt_username_text.set(""))
+        username_entry.grid(row=self.mainframe_lower.next_row(), sticky=S)
+        username_entry.grid_configure(padx=self.entry_padx, pady=self.entry_pady)
 
     def insert_password(self, font_class,label_text="Password:", background_color="#20262b", text_color="#c2c5ce"):
 
         password_label = ttk.Label(self.mainframe_lower, text=label_text, background=background_color,
                                    foreground=text_color, font=font_class)
-        password_label.grid(row=3, sticky=N)
+        password_label.grid(row=self.mainframe_lower.next_row(), sticky=N)
         password_label.grid_configure(padx=self.entry_padx)
 
         password_entry =ttk.Entry(self.mainframe_lower, textvariable=self.password_text, width=36, show="*")
-        password_entry.grid(row=4, sticky=S)
+        password_entry.grid(row=self.mainframe_lower.next_row(), sticky=S)
         password_entry.grid_configure(padx=self.entry_padx, pady=self.entry_pady)
 
     def insert_password_again(self, font_class,label_text="Re-enter Password:", background_color="#20262b",
@@ -454,7 +562,7 @@ class BaseFormWindow(Toplevel):
 
         password_label = ttk.Label(self.mainframe_lower, text=label_text, background=background_color,
                                    foreground=text_color, font=font_class)
-        password_label.grid(row=5, sticky=N)
+        password_label.grid(row=self.mainframe_lower.next_row(), sticky=N)
         password_label.grid_configure(padx=self.entry_padx)
 
         password_entry =ttk.Entry(
@@ -464,7 +572,7 @@ class BaseFormWindow(Toplevel):
                                                                 username=self.username_text,
                                                                 button_instance=self.submit_button)
         )
-        password_entry.grid(row=6, sticky=S)
+        password_entry.grid(row=next(self.mainframe_lower_row_number_generator), sticky=S)
         password_entry.grid_configure(padx=self.entry_padx, pady=self.entry_pady)
 
         print(password_entry["width"])
@@ -478,7 +586,7 @@ class BaseFormWindow(Toplevel):
 
         cancel_submit_frame = ttk.Frame(self.mainframe_lower, style="lower.TFrame", width=cancel_submit_frame_width,
                                         height=cancel_submit_frame_height, relief="sunken")
-        cancel_submit_frame.grid(row=7, sticky=S)
+        cancel_submit_frame.grid(row=self.mainframe_lower.next_row(), sticky=S)
         cancel_submit_frame.grid_configure(padx=self.entry_padx, pady=cancel_submit_frame_pady)
         cancel_submit_frame.grid_propagate(False)
         cancel_submit_frame.columnconfigure(0, weight=1)
@@ -511,12 +619,12 @@ class BaseFormWindow(Toplevel):
         notif_label = ttk.Label(self.mainframe_lower, text=text, background=background_color,
                                 foreground=text_color, font=font_class, relief="ridge",
                                 wraplength=int(self.form_window_width*0.65), justify="center")
-        notif_label.grid(row=9, sticky=N)
+        notif_label.grid(row=self.mainframe_lower.next_row(), sticky=N)
         notif_label.grid_configure(padx=notif_padx, pady=notif_pady)
 
         continue_button = ttk.Button(self.mainframe_lower, text="CONTINUE", width=continue_button_width,
                                    command=command_callback, style="cancel.TButton", default="active")
-        continue_button.grid(row=10, sticky=(N,S))
+        continue_button.grid(row=self.mainframe_lower.next_row(), sticky=(N,S))
         continue_button.grid_configure(padx=notif_padx, pady=notif_pady)
 
         self.bind('<Return>', lambda event: continue_button.invoke())
@@ -1590,6 +1698,19 @@ class ButtonLikeCanvas(Canvas):
         self.itemconfig(self.line_id, width=3)
 
 
+class FrameWithGeneratorRows(ttk.Frame):
+    """
+    frame automatically generates the proper next row
+    Use if you are adding widgets into frame sequentially.
+    """
+    def __init__(self, master, **kw):
+        super().__init__(master, **kw)
+
+        self.current_row = generate_row_number()
+
+    def next_row(self):
+
+        return next(self.current_row)
 
 
 
@@ -1789,7 +1910,7 @@ try:
     root.resizable(False, False)
     # root.iconphoto(True, logo_image)
     root.iconphoto(True, icon_photo)
-    # root.after(500, print, "Samuel is good")
+    # root.after(500, print, "test")
     tksupport.install(root)
     reactor.run()
 except (SystemExit, KeyboardInterrupt):
