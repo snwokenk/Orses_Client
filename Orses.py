@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
+from idlelib.tooltip import  ToolTip
 from PIL import Image, ImageTk
 from twisted.internet import tksupport, reactor
 
@@ -1518,10 +1519,33 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         wallet_id_label.grid(column=0, row=0, sticky=(W, S))
         root.update()
 
-        wallet_id_label_padx= int((self.middle_Frame.winfo_width() - wallet_id_label.winfo_width())/2)
+        wallet_id_label_padx= (int((self.middle_Frame.winfo_width() - wallet_id_label.winfo_width())/2), 2)
         wallet_id_label_pady= int((self.middle_Frame.winfo_height() - wallet_id_label.winfo_height())/2)
         wallet_id_label.grid_configure(pady=wallet_id_label_pady,
                                        padx=wallet_id_label_padx)
+
+
+        clipboard_image = Image.open("copy_icon.png")
+        # print((int(wallet_id_label.winfo_width()/15), int(wallet_id_label.winfo_height()*0.95)))
+        clipboard_image = clipboard_image.resize(
+            (int(wallet_id_label.winfo_width()/20), int(wallet_id_label.winfo_height()*0.95)), Image.ANTIALIAS)
+        clipboard_image_TK = ImageTk.PhotoImage(clipboard_image)
+
+        print(clipboard_image_TK.width(), clipboard_image_TK.height())
+
+        clipboard_button = ButtonLikeCanvas(
+            self.middle_Frame,
+            image=clipboard_image_TK,
+            c_width=clipboard_image_TK.width(),
+            c_height=clipboard_image_TK.height(),
+            borderwidth=1,
+            padx=(0, 100),
+            pady=0,
+        )
+        clipboard_button.grid(column=1, row=0, sticky=(W))
+        ToolTip(clipboard_button, "COPY")
+        # clipboard_image.close()
+
 
     def __insert_lower_frame_widgets(self):
         frame_for_buttonlike_canvas = ttk.Frame(
@@ -1835,14 +1859,18 @@ class ButtonLikeCanvas(Canvas):
     use this class to create buttons from canvas
     """
 
-    def __init__(self, master, text, command=None, padx=None, pady=None, image=None,color=None,**kw):
+    def __init__(self, master, text=None, command=None, padx=None, pady=None, image=None, color=None,
+                 c_width=None, c_height=None, borderwidth=0, relief=None, **kw):
+
         super().__init__(master, **kw)
         assert isinstance(master, (Canvas, ttk.Frame, Frame, Toplevel, Tk)), "not proper master"
-        self["width"] = int(master.winfo_width()/4)
-        self["height"] = int(master.winfo_width()/4)
-        self["relief"] = "flat"
+        self["width"] = int(master.winfo_width()/4) if not c_width else c_width
+
+        self["height"] = int(master.winfo_width()/4) if not c_height else c_height
+
+        self["relief"] = relief if relief else "flat"
         self["background"] = "#2d3e4c" if color is None else color
-        self["borderwidth"] = 0
+        self["borderwidth"] = borderwidth
         self["highlightthickness"] = 0
         self["highlightcolor"] = color if color else self["highlightcolor"]
 
@@ -1850,13 +1878,25 @@ class ButtonLikeCanvas(Canvas):
         self.pady = pady if pady else int(master.winfo_height()/8)
         self.grid_configure(padx=self.padx, pady=self.pady)
 
+        self.middle_of_canvas = (int(int(self["width"]) / 2), int(int(self["height"])/2))
+
         self.text = text
         self.image = image
-        self.text_id = self.create_text(90, 80, text=text, justify=CENTER, anchor=CENTER,
-                                        font=font.Font(family="Times", size=13, weight="normal"), fill="white")
-        self.line_coord = self.bbox(self.text_id)
+        self.text_id = self.create_text(
+            90,
+            80,
+            text=text,
+            justify=CENTER,
+            anchor=CENTER,
+            font=font.Font(family="Times", size=13, weight="normal"),
+            fill="white"
+        ) if self.text else None
+
+        self.image_id = self.create_image(self.middle_of_canvas[0], self.middle_of_canvas[1], image=image, anchor=CENTER)
+
+        self.line_coord = self.bbox(self.text_id) if self.text_id else None
         self.line_id = self.create_line(self.line_coord[0], self.line_coord[3]+2, self.line_coord[2], self.line_coord[3]+2,
-                                        fill="#42a1f4", width=3)
+                                        fill="#42a1f4", width=3) if self.line_coord else None
         self.command = command
 
         self.bind("<Button-1>", self.__pressed)
@@ -1867,23 +1907,33 @@ class ButtonLikeCanvas(Canvas):
 
     def __pressed(self, event):
 
-        print(self["relief"], "\n", event, self.text_id, self.bbox(self.text_id))
+        print(self["relief"], "\n", event, self.text_id, self.bbox(self.text_id)) if self.text_id else None
         self["relief"] = "sunken"
         # print(self.bbox(1))
-        self.move(self.text_id, 1, 1)  # used to moved create_text id right and down 1 pixel (simulates button moving)
-        self.move(self.line_id, 1, 1)
+        self.move(self.text_id, 1, 1) if self.text_id else None  # used to moved create_text id right and down 1 pixel (simulates button moving)
+        self.move(self.line_id, 1, 1) if self.line_id else None
+        self.move(self.image_id, 1, 1) if self.image_id else None
 
     def __pressed_released(self, event):
 
         print("button released", "\n", event)
         self["relief"] = "raised"
         # print(self.bbox(1))
-        self.move(self.text_id, -1, -1)  # used to moved create_text id left and up 1 pixel (simulates button moving)
-        self.move(self.line_id, -1, -1)
+        self.move(self.text_id, -1, -1) if self.text_id else None # used to moved create_text id left and up 1 pixel (simulates button moving)
+        self.move(self.line_id, -1, -1) if self.line_id else None
+        self.move(self.image_id, -1, -1) if self.image_id else None
         if callable(self.command):
             self.command()
+        elif isinstance(self.command, list) and len(self.command) > 1 and callable(self.command[0]):
+
+            command_string = f'{self.command[0].__name__}('
+            for i in self.command[1:]:
+                command_string += f'{i},'
+            command_string += ")"
+
+            eval(command_string)
         else:
-            print("command argument must be a callable ie. function\n------\n")
+            print("command argument must be a callable ie. function OR List with [callable, arguments]\n------\n")
 
     def _entered_canvas(self, event):
         print('mouse entered', "\n", event)
