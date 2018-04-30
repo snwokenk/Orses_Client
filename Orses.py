@@ -8,6 +8,7 @@ from twisted.internet import tksupport, reactor
 # https://stackoverflow.com/questions/17635905/ttk-entry-background-colour/17639955
 # https://stackoverflow.com/questions/35229352/threading-with-twisted-with-tkinter
 # http://code.activestate.com/recipes/580778-tkinter-custom-fonts/
+# https://www.iconfinder.com/icons/211732/copy_icon#size=128
 
 from Orses_User.User_CLI_Helper import UserCLI, User
 from Orses_Wallet.Wallet_CLI_Helper import WalletCLI
@@ -907,6 +908,8 @@ class BaseLoggedInWindow(Toplevel):
         welcome_label_pady = int(self.welcome_frame.winfo_height()*.10)
         welcome_label.grid_configure(padx=welcome_label_padx, pady=welcome_label_pady)
 
+
+
         # add a read only entry
         print(self.client_id_str.get())
         client_id_entry = ttk.Entry(self.welcome_frame, textvariable=self.client_id_str,
@@ -914,6 +917,30 @@ class BaseLoggedInWindow(Toplevel):
                                     exportselection=1, style="welcome.TEntry",
                                     font=font.Font(family="Times", size=16, weight="bold",))
         client_id_entry.grid(row=2, column=0)
+        root.update()
+
+        global clipboard_image
+        clipboard_image1 = clipboard_image.resize(
+            (int(client_id_entry.winfo_width()/30), int(client_id_entry.winfo_height()*0.75)), Image.ANTIALIAS)
+        clipboard_image_TK = ImageTk.PhotoImage(clipboard_image1)
+        print("im here 1", clipboard_image_TK)
+
+        clipboard_button_padx = int((self.welcome_frame.winfo_width() -
+                                  (client_id_entry.winfo_width()))/2)
+        clipboard_button = ButtonLikeCanvas(
+            self.welcome_frame,
+            image=clipboard_image_TK,
+            c_width=clipboard_image_TK.width(),
+            c_height=clipboard_image_TK.height(),
+            borderwidth=1,
+            padx=(0, clipboard_button_padx),
+            pady=1,
+            command=lambda: (root.clipboard_clear(), root.clipboard_append(self.client_id_str.get()))
+        )
+        clipboard_button.grid(column=0, row=3, sticky=(E, S))
+        ToolTip(clipboard_button, "COPY")
+        self.update()
+
 
     def add_wallet_creation_frame(self, left_frame_top_mid):
 
@@ -1507,12 +1534,10 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         print("logo label size: ", logo_label.winfo_width(), logo_label.winfo_height())
 
     def __insert_middle_frame_widgets(self):
-
+        temp_id = client_user.wallet_service_instance.wallet_instance.get_wallet_id()
         # insert wallet label
         wallet_id_label = ttk.Label(self.middle_Frame,
-                                    text="Wallet ID: {}".format(
-                                        client_user.wallet_service_instance.wallet_instance.get_wallet_id()
-                                    ),
+                                    text=f"Wallet ID: {temp_id}",
                                     background="#181e23",
                                     foreground="#c2c5ce",
                                     font=main_menu_top_label)
@@ -1524,12 +1549,13 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         wallet_id_label.grid_configure(pady=wallet_id_label_pady,
                                        padx=wallet_id_label_padx)
 
-
-        clipboard_image = Image.open("copy_icon.png")
+        global clipboard_image
+        # clipboard_image = Image.open("copy_icon.png")
         # print((int(wallet_id_label.winfo_width()/15), int(wallet_id_label.winfo_height()*0.95)))
-        clipboard_image = clipboard_image.resize(
-            (int(wallet_id_label.winfo_width()/20), int(wallet_id_label.winfo_height()*0.95)), Image.ANTIALIAS)
-        clipboard_image_TK = ImageTk.PhotoImage(clipboard_image)
+        clipboard_image2 = clipboard_image.resize(
+            (int(wallet_id_label.winfo_width()/30), int(wallet_id_label.winfo_height()*0.90)), Image.ANTIALIAS)
+        clipboard_image_TK = ImageTk.PhotoImage(clipboard_image2)
+        print("im here", clipboard_image_TK)
 
         print(clipboard_image_TK.width(), clipboard_image_TK.height())
 
@@ -1541,6 +1567,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             borderwidth=1,
             padx=(0, 100),
             pady=0,
+            command=lambda: (root.clipboard_clear(), root.clipboard_append(temp_id))
         )
         clipboard_button.grid(column=1, row=0, sticky=(W))
         ToolTip(clipboard_button, "COPY")
@@ -2153,7 +2180,7 @@ lower_frame.rowconfigure(5, weight=1)
 
 # self.logo_image = image2.resize((int(self.top_frame.winfo_height()*0.85), int(self.top_frame_height*0.85)),
 #                                 Image.ANTIALIAS)
-
+clipboard_image = Image.open("copy_icon.png")
 icon_photo = ImageTk.PhotoImage(Image.open("OLogo.png"))
 
 try:
