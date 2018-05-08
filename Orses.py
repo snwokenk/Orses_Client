@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter import font
 from idlelib.tooltip import  ToolTip
 from PIL import Image, ImageTk
-from twisted.internet import tksupport, reactor
+from twisted.internet import tksupport, reactor, threads
 
 # https://stackoverflow.com/questions/17635905/ttk-entry-background-colour/17639955
 # https://stackoverflow.com/questions/35229352/threading-with-twisted-with-tkinter
@@ -14,6 +14,7 @@ from Orses_User.User_CLI_Helper import UserCLI, User
 from Orses_Wallet.Wallet_CLI_Helper import WalletCLI
 from Orses_Wallet.WalletService_CLI_Helper import WalletServiceCLI
 
+import queue, time
 """
 begin needed functions
 """
@@ -31,6 +32,42 @@ def check_active_peers():
     else:
         return
 
+def send_tokens(amount, fee, receiving_wid, password_for_wallet, instance_of_self, min_ttx_amt=40):
+    q_obj = queue.Queue()
+
+    print("started here", amount, fee, receiving_wid, password_for_wallet, WSCLI.user)
+    if amount < min_ttx_amt:
+        # use asgn statement
+        print("in asgn")
+        reactor.callFromThread(
+            WSCLI.send_tokens,
+            reactor_instance=reactor,
+            amount=amount,
+            fee=fee,
+            receiving_wid=receiving_wid,
+            password_for_wallet=password_for_wallet,
+            q_obj=q_obj
+
+        )
+    else:
+        # use transfer transaction
+        print("in ttx")
+        reactor.callFromThread(
+            WSCLI.transfer_tokens,
+            reactor_instance=reactor,
+            amount=amount,
+            fee=fee,
+            receiving_wid=receiving_wid,
+            password_for_wallet=password_for_wallet,
+            q_obj=q_obj
+
+        )
+    print("now here")
+    response_deferred = threads.deferToThread(q_obj.get)
+    response_deferred.addCallback(instance_of_self.send_token_network_response)
+
+    # print("vars: ", vars(instance_of_self.network_response_deffered))
+
 
 def periodic_network_check(label_widget, wscli):
     label_widget["text"] = "Active Peers: {}".format(len(wscli.dict_of_active))
@@ -38,8 +75,6 @@ def periodic_network_check(label_widget, wscli):
     print("checking")
     check_active_peers()
     # root.after(5000, periodic_network_check, label_widget, wscli)
-
-
 
 
 def change_colors(num=1):
@@ -884,7 +919,7 @@ class BaseLoggedInWindow(Toplevel):
 
     def insert_notebook_widget(self):
 
-        self.notebookwidget = ttk.Notebook(self.middle_frame, style="middle.TNotebook")
+        self.notebookwidget = ttk.Notebook(self.middle_frame, style="middle.TNotebook", padding=0)
         self.notebookwidget.grid(row=0)
 
     def add_welcome_frame_to_notebook_widget(self):
@@ -1381,7 +1416,19 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.reserve_length_float = DoubleVar(value=30.0)
         self.reservce_wallet_password_text = StringVar()
 
+        self.network_response_deffered = None
 
+
+    def send_token_network_response(self, x):
+        """
+        used in send token, reserve tokens, validate balance functions. used as a callBack function from a
+        deferral object created by deferToThread
+        :param x:
+        :return:
+        """
+
+        self.network_response_deffered = x
+        print(self.network_response_deffered)
 
     def insert_frame_based_on_created_loaded_client_wallet(self, created=True):
         if client_wallet:
@@ -1451,7 +1498,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.lower_frame["width"] = self.winfo_width()
         self.lower_frame["height"] = self.lower_frame_height
         self.lower_frame["style"] = "middle.TFrame"
-        self.lower_frame["relief"] = "solid"
+        self.lower_frame["relief"] = "flat"
         self.lower_frame.grid(row=2)
         self.lower_frame.grid_propagate(False)
 
@@ -1750,7 +1797,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             cancel_submit_frame,
             text="SEND",
             width=cancel_button_width,
-            command=lambda: print('submited'),
+            command=lambda: (send_tokens(self.send_amount_float.get(), self.send_amount_fee_float.get(), self.wallet_address_text.get(), self.wallet_password_text.get(), self)),
             default="active",
             style="submit.TButton"
         )
@@ -2033,8 +2080,7 @@ ttk_style.map(
 
 )
 ttk_style.configure("middle.TNotebook", background='#181e23', foreground="#c2c5ce")
-ttk_style.configure("middle.TNotebook.Tab", background="#263038",foreground="#c2c5ce",
-                    font=("Times", 12, "normal"))
+ttk_style.configure("middle.TNotebook.Tab", background="#263038",foreground="#c2c5ce", font=("Times", 12, "normal"))
 ttk_style.map(
     "middle.TNotebook.Tab",
     background=[

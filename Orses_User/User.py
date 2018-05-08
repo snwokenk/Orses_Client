@@ -306,6 +306,8 @@ class User:
         :param amount: amount of tokens to send
         :return: json encoded dictionary OR False
         """
+
+        print("in create_sign_asgn")
         assignment_statement = \
         self.wallet_service_instance.assign_tokens(
             receiving_wid=receiving_wid, bk_connected_wid="0123456789abcdef", amount_of_tokens=amount,

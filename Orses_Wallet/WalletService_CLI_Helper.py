@@ -31,14 +31,19 @@ class WalletServiceCLI:
         if self.nm:
             self.nm.get_active_peers()
 
-    def send_tokens(self, amount, fee, receiving_wid, password_for_wallet, q, q_obj, reactor_instance=None):
+    def send_tokens(self, amount, fee, receiving_wid, password_for_wallet, q_obj, reactor_instance=None):
 
         assert (amount > 0 and fee > 0), "Amount of Tokens To Send MUST Not Be Negative"
         # returns a statement if all is ok, else False for wrong password, none for stmts not passing validator test
+        print("this is statement before")
         stmt = self.user.create_sign_asgn_stmt(amount=amount, receiving_wid=receiving_wid, fee=fee,
                                                password_for_wallet=password_for_wallet, )
+
+        print("this is statement after", stmt)
         if stmt:
             # nm = NetworkManager(user=self.user)
+
+            print("statement is true")
 
             reactor_instance.callFromThread(
                 self.nm.send_assignment_statement,
@@ -57,9 +62,8 @@ class WalletServiceCLI:
         print('----')
         print(stmt)
         print("----")
-        q.put(stmt)
 
-    def transfer_tokens(self, amount, receiving_wid, fee, password_for_wallet, q, q_obj, reactor_instance=None):
+    def transfer_tokens(self, amount, receiving_wid, fee, password_for_wallet, q_obj, reactor_instance=None):
 
         assert (amount > 0 and fee > 0), "Amount of Tokens To Send MUST Not Be Negative"
         ttx = self.user.create_transfer_transaction(receiving_wid=receiving_wid, amount=amount, fee=fee,
@@ -85,7 +89,6 @@ class WalletServiceCLI:
         print('----')
         print(ttx)
         print("----")
-        q.put(ttx)
 
     def reserve_tokens_bk_connected_wallet(self, amount, fee, wallet_password, veri_node_proxies, q, q_obj, time_limit,
                                            reactor_instance=None):

@@ -124,6 +124,7 @@ class NetworkSpeakerFactory(ReconnectingClientFactory):
             if self.total_verified:
                 self.q_object.put(self.total_verified/self.exp_conn)
             else:
+                print("all connections tried")
                 self.q_object.put(0.00)
 
     def buildProtocol(self, addr):
