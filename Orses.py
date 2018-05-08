@@ -32,6 +32,9 @@ def check_active_peers():
     else:
         return
 
+def reserve_tokens()
+
+
 def send_tokens(amount, fee, receiving_wid, password_for_wallet, instance_of_self, min_ttx_amt=40):
     q_obj = queue.Queue()
 
@@ -1318,7 +1321,6 @@ class BaseLoggedInWindow(Toplevel):
         self.bind('<Return>', lambda event: close_button.invoke())
         self.bind('<KP_Enter>', lambda event: close_button.invoke())
 
-
     def change_left_frame_top_mid(self, left_frame_top_mid, main_menu_frame):
         global client_wallet
         if client_wallet:
@@ -1428,7 +1430,37 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         """
 
         self.network_response_deffered = x
-        print(self.network_response_deffered)
+        # if self.network_response_deffered >= 0.50:
+        for i in self.send_token_form_frame.winfo_children():
+            print("child: ", i, type(i))
+            i.grid_remove()
+        self.wallet_address_text.set("")
+        self.send_amount_float.set(0.0)
+        self.send_amount_fee_float.set(0.0)
+        self.wallet_password_text.set("")
+        if self.network_response_deffered == 0.0:
+
+            text = "Tokens Not Sent. Check To Make Sure You Have Active Peers Available And You Are Connected\n" \
+                   "To The Internet"
+            color = "red"
+        elif self.network_response_deffered < 0.0:
+            text = "Wrong Wallet Password "
+            color = "red"
+
+        else:
+            text = "Tokens Sent"
+            color = "green"
+
+        self.insert_notification_label(
+            text=text,
+            font_class=notif_label_font,
+            text_color=color,
+            master=self.send_token_form_frame
+        )
+
+
+
+
 
     def insert_frame_based_on_created_loaded_client_wallet(self, created=True):
         if client_wallet:
@@ -1657,7 +1689,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
 
     # if wallet not created (false or none)
     def insert_notification_label(self, text, font_class, background_color="#181e23",
-                                  text_color="white"):
+                                  text_color="white", master=None):
         """
         use to display notification if wallet is not created because of wrong password or conflicting nickname
 
@@ -1668,26 +1700,28 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         :return:
         """
 
+        master = self if master is None else master
+
         # insert label
-        notif_label = ttk.Label(self, text=text, background=background_color,
+        notif_label = ttk.Label(master, text=text, background=background_color,
                                 foreground=text_color, font=font_class, relief="ridge",
-                                wraplength=int(self.winfo_width()*0.65), justify="center")
+                                wraplength=int(master.winfo_width()*0.65), justify="center")
         notif_label.grid(row=9, sticky=N)
         root.update()
-        notif_padx = int((self.winfo_width() - notif_label.winfo_width())/2)
-        notif_pady = int(self.winfo_height()*0.05)
+        notif_padx = int((master.winfo_width() - notif_label.winfo_width())/2)
+        notif_pady = int(master.winfo_height()*0.05)
         notif_label.grid_configure(padx=notif_padx, pady=notif_pady)
 
-        continue_button_width = int(self.winfo_width()*0.055)
-        continue_button = ttk.Button(self, text="CONTINUE", width=continue_button_width,
-                                     command=lambda: self.destroy(), style="cancel.TButton", default="active")
+        continue_button_width = int(master.winfo_width()*0.055)
+        continue_button = ttk.Button(master, text="CONTINUE", width=continue_button_width,
+                                     command=lambda: master.destroy(), style="cancel.TButton", default="active")
         continue_button.grid(row=10, sticky=(N,S))
         root.update()
-        x_axis = int((self.winfo_width() - continue_button.winfo_width())/2)
+        x_axis = int((master.winfo_width() - continue_button.winfo_width())/2)
         continue_button.grid_configure(padx=x_axis, pady=notif_pady)
 
-        self.bind('<Return>', lambda event: continue_button.invoke())
-        self.bind('<KP_Enter>', lambda event: continue_button.invoke())
+        master.bind('<Return>', lambda event: continue_button.invoke())
+        master.bind('<KP_Enter>', lambda event: continue_button.invoke())
 
     def add_send_token_form_frame(self):
         """
@@ -1792,16 +1826,21 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
                                                     self.wallet_password_text.set("")),
                                    style="cancel.TButton")
         cancel_button.grid(row=0, column=0, sticky=W)
-
+        sending_label = ttk.Label(self.send_token_form_frame, text="Sending....Please Wait", background="#181e23",
+                                  foreground="#c2c5ce", font=form_label_font)
+        submit_button = None
         submit_button = ttk.Button(
             cancel_submit_frame,
             text="SEND",
             width=cancel_button_width,
-            command=lambda: (send_tokens(self.send_amount_float.get(), self.send_amount_fee_float.get(), self.wallet_address_text.get(), self.wallet_password_text.get(), self)),
+            command=lambda: (submit_button.state(["disabled"]), send_tokens(self.send_amount_float.get(), self.send_amount_fee_float.get(), self.wallet_address_text.get(), self.wallet_password_text.get(), self),
+                             sending_label.grid(row=10, sticky=N), root.update(),sending_label.grid_configure(padx=get_padx(self.send_token_form_frame, sending_label))),
             default="active",
             style="submit.TButton"
         )
         submit_button.grid(row=0, column=1, sticky=E)
+
+
         self.bind('<Return>', lambda event: submit_button.invoke())
         self.bind('<KP_Enter>', lambda event: submit_button.invoke())
 

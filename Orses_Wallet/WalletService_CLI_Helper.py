@@ -53,12 +53,8 @@ class WalletServiceCLI:
                 q_object_from_walletcli=q_obj
             )
 
-            # if q_obj.get() >= 0.50:  # self.qq should return total_verified/total_connected
-            #     print("updating balance")
-            #     self.user.wallet_service_instance.wallet_instance.sub_balance_add_locked(amount=amount, fee=fee)
-            #     self.user.wallet_service_instance.update_save_wallet_details(password=password_for_wallet)
-
-        # sends statement, or False for wrong password
+        else:
+            q_obj.put(-1.0)
         print('----')
         print(stmt)
         print("----")
@@ -79,18 +75,16 @@ class WalletServiceCLI:
                 wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key().hex(),
                 q_object_from_walletcli=q_obj
             )
-            # if q_obj.get() >= 0.50:  # self.qq should return total_verified/total_connected
-            #
-            #     self.user.wallet_service_instance.wallet_instance.sub_balance_add_locked(amount=amount, fee=fee)
-            #     self.user.wallet_service_instance.update_save_wallet_details(password=password_for_wallet)
 
+        else:
+            q_obj.put(-1.0)
 
         # sends statement, or False for wrong password
         print('----')
         print(ttx)
         print("----")
 
-    def reserve_tokens_bk_connected_wallet(self, amount, fee, wallet_password, veri_node_proxies, q, q_obj, time_limit,
+    def reserve_tokens_bk_connected_wallet(self, amount, fee, wallet_password, veri_node_proxies, q_obj, time_limit,
                                            reactor_instance=None):
         assert (amount > 0 and fee > 0), "Amount of Tokens To Send MUST Not Be Negative"
 
@@ -115,7 +109,7 @@ class WalletServiceCLI:
         print('----')
         print(trr)
         print("----")
-        q.put(trr)
+
 
     def revoke_reserved_tokens_bk_connected_wallet(self, trr_hash, fee, wallet_password, veri_node_proxies, q, q_obj,
                                                    reactor_instance=None):
