@@ -66,7 +66,6 @@ class WalletServiceCLI:
                                                     password_for_wallet=password_for_wallet)
 
         if ttx:
-            # nm = NetworkManager(user=self.user)
 
             reactor_instance.callFromThread(
                 self.nm.send_transfer_transaction,
@@ -77,6 +76,7 @@ class WalletServiceCLI:
             )
 
         else:
+
             q_obj.put(-1.0)
 
         # sends statement, or False for wrong password
@@ -92,7 +92,7 @@ class WalletServiceCLI:
                                                  time_limit=time_limit, veri_node_proxies=veri_node_proxies)
 
         if trr:
-            # nm = NetworkManager(user=self.user)
+
             reactor_instance.callFromThread(
                 self.nm.send_token_reservation_request,
                 tkn_rsv_req=trr,
@@ -101,9 +101,9 @@ class WalletServiceCLI:
                 q_object_from_walletcli=q_obj
             )
 
-            # if q_obj.get() >= 0.50:  # self.qq should return total_verified/total_connected
-            #     self.user.wallet_service_instance.wallet_instance.sub_balance_add_locked(amount=amount, fee=fee)
-            #     self.user.wallet_service_instance.update_save_wallet_details(password=wallet_password)
+        else:
+
+            q_obj.put(-1.0)
 
         # sends statement, or False for wrong password
         print('----')

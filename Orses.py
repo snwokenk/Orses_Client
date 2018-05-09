@@ -32,16 +32,52 @@ def check_active_peers():
     else:
         return
 
-def reserve_tokens()
+
+def reserve_tokens(amount, fee, wallet_password, time_limit, instance_of_self):
+    q_obj = queue.Queue()
+    veri_node_proxies = ["ID-01f", "ID-256a"]
+
+    if 30 <= time_limit <= 1825:  # if within this turn to seconds
+        time_limit *= 86400
+    elif 2592000 <= time_limit <= 157680000:
+        pass
+    else:
+        q_obj.put("time_limit")
+        response_deferred = threads.deferToThread(q_obj.get)
+        response_deferred.addCallback(instance_of_self.reserve_token_network_response)
+        return None
+
+    if amount < 250000.0:
+        q_obj.put("low_amount")
+        response_deferred = threads.deferToThread(q_obj.get)
+        response_deferred.addCallback(instance_of_self.reserve_token_network_response)
+        return None
+    if fee < 1.0:
+        q_obj.put("low_fee")
+        response_deferred = threads.deferToThread(q_obj.get)
+        response_deferred.addCallback(instance_of_self.reserve_token_network_response)
+        return None
+
+    reactor.callFromThread(
+        WSCLI.reserve_tokens_bk_connected_wallet,
+        amount=amount,
+        fee=fee,
+        wallet_password=wallet_password,
+        veri_node_proxies=veri_node_proxies,
+        q_obj=q_obj,
+        time_limit=time_limit,
+        reactor_instance=reactor
+    )
+    response_deferred = threads.deferToThread(q_obj.get)
+    response_deferred.addCallback(instance_of_self.reserve_token_network_response)
 
 
 def send_tokens(amount, fee, receiving_wid, password_for_wallet, instance_of_self, min_ttx_amt=40):
     q_obj = queue.Queue()
 
-    print("started here", amount, fee, receiving_wid, password_for_wallet, WSCLI.user)
     if amount < min_ttx_amt:
+
         # use asgn statement
-        print("in asgn")
         reactor.callFromThread(
             WSCLI.send_tokens,
             reactor_instance=reactor,
@@ -52,6 +88,7 @@ def send_tokens(amount, fee, receiving_wid, password_for_wallet, instance_of_sel
             q_obj=q_obj
 
         )
+
     else:
         # use transfer transaction
         print("in ttx")
@@ -65,14 +102,12 @@ def send_tokens(amount, fee, receiving_wid, password_for_wallet, instance_of_sel
             q_obj=q_obj
 
         )
-    print("now here")
     response_deferred = threads.deferToThread(q_obj.get)
     response_deferred.addCallback(instance_of_self.send_token_network_response)
 
-    # print("vars: ", vars(instance_of_self.network_response_deffered))
-
 
 def periodic_network_check(label_widget, wscli):
+
     label_widget["text"] = "Active Peers: {}".format(len(wscli.dict_of_active))
 
     print("checking")
@@ -1416,10 +1451,48 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.reserve_amount_float = DoubleVar()
         self.reserve_amount_fee_float = DoubleVar(value=1.0)
         self.reserve_length_float = DoubleVar(value=30.0)
-        self.reservce_wallet_password_text = StringVar()
+        self.reserve_wallet_password_text = StringVar()
 
         self.network_response_deffered = None
 
+    def reserve_token_network_response(self, x):
+        self.network_response_deffered = x
+        # if self.network_response_deffered >= 0.50:
+        for i in self.reserve_token_form_frame.winfo_children():
+            print("child: ", i, type(i))
+            i.grid_remove()
+        self.reserve_amount_float.set(0.0)
+        self.reserve_amount_fee_float.set(1.0)
+        self.reserve_wallet_password_text.set("")
+        self.reserve_length_float.set(30.0)
+
+        if self.network_response_deffered == "time_limit":
+            text = "Reservation Not Made. Duration Of Reservation Must Be Between 30 to 1825 days or\n" \
+                   "2592000 to 157680000 seconds. "
+            color = "red"
+        elif self.network_response_deffered == "low_amount":
+            text = "Reservation Amount Can Not Be Less Than 250,000 tokens"
+            color = "red"
+        elif self.network_response_deffered == "low_fee":
+            text = "Fee For Token Reservation Must Be 1 Token Or Greater"
+            color = "red"
+        elif self.network_response_deffered == 0.0:
+            text = "Tokens Not Reserved. Check To Make Sure You Have Active Peers Available And You Are Connected\n" \
+                   "To The Internet"
+            color = "red"
+        elif self.network_response_deffered < 0.0:
+            text = "Wrong Wallet Password! Please Try Again"
+            color = "red"
+        else:
+            text = "Tokens Reserved"
+            color = "green"
+
+        self.insert_notification_label(
+            text=text,
+            font_class=notif_label_font,
+            text_color=color,
+            master=self.reserve_token_form_frame
+        )
 
     def send_token_network_response(self, x):
         """
@@ -1826,6 +1899,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
                                                     self.wallet_password_text.set("")),
                                    style="cancel.TButton")
         cancel_button.grid(row=0, column=0, sticky=W)
+
         sending_label = ttk.Label(self.send_token_form_frame, text="Sending....Please Wait", background="#181e23",
                                   foreground="#c2c5ce", font=form_label_font)
         submit_button = None
@@ -1903,7 +1977,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
 
         # insert Reserve length
 
-        reserve_len_text = "Rsv Duration. min 30 days:"
+        reserve_len_text = "Duration: "
         reserve_len_label = ttk.Label(self.reserve_token_form_frame, text=reserve_len_text, background="#181e23",
                                              foreground="#c2c5ce", font=form_label_font)
         reserve_len_label.grid(row=5, sticky=N)
@@ -1921,7 +1995,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         password_label.grid(row=7, sticky=N)
         password_label.grid_configure(padx=get_padx(self.reserve_token_form_frame, password_label))
 
-        password_entry =ttk.Entry(self.reserve_token_form_frame, textvariable=self.reservce_wallet_password_text, width=40,
+        password_entry =ttk.Entry(self.reserve_token_form_frame, textvariable=self.reserve_wallet_password_text, width=40,
                                   takefocus=False, show="*")
         password_entry.grid(row=8, sticky=S)
         password_entry.grid_configure(padx=get_padx(self.reserve_token_form_frame, password_entry),
@@ -1953,11 +2027,16 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
                                    style="cancel.TButton")
         cancel_button.grid(row=0, column=0, sticky=W)
 
+        # create reserve label, but only added to grid when submit button pressed
+        reserving_label = ttk.Label(self.reserve_token_form_frame, text="Broadcasting To Network....Please Wait", background="#181e23",
+                                    foreground="#c2c5ce", font=form_label_font)
+        submit_button = None
         submit_button = ttk.Button(
             cancel_submit_frame,
             text="SEND",
             width=cancel_button_width,
-            command=lambda: print('submited'),
+            command=lambda: (submit_button.state(["disabled"]), reserve_tokens(self.reserve_amount_float.get(), self.reserve_amount_fee_float.get(), self.reserve_wallet_password_text.get(), self.reserve_length_float.get(), self),
+                             reserving_label.grid(row=10, sticky=N), root.update(),reserving_label.grid_configure(padx=get_padx(self.send_token_form_frame, reserving_label))),
             default="active",
             style="submit.TButton"
         )
