@@ -1248,6 +1248,7 @@ class BaseLoggedInWindow(Toplevel):
         # instantiate main menu frame and submit button
         main_menu_frame = MainWalletMenuFrame(
             self.notebookwidget,
+            top_window=self,
             width=self.middle_frame_width,
             height=self.middle_frame_height
         )
@@ -1257,6 +1258,8 @@ class BaseLoggedInWindow(Toplevel):
             text="LOAD",
             width=cancel_button_width,
             command=lambda: (
+                # self.unbind_all('<Return>'),
+                # self.unbind_all('<KP_Enter>'),
                 UserAndWalletCommands.load_wallet(
                     self.load_nickname_text.get(),
                     self.load_password_text.get(),
@@ -1271,6 +1274,7 @@ class BaseLoggedInWindow(Toplevel):
                 self.load_nickname_text.set(""),
                 self.load_password_text.set(""),
                 self.change_left_frame_top_mid(left_frame_top_mid, main_menu_frame),
+                cancel_submit_frame.destroy(),
                 print(client_user)
             ),
             default="active",
@@ -1432,8 +1436,9 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
     Use to add frame to a notebook widget, automatically sets width and height and propagate to false
     """
 
-    def __init__(self, master, **kw):
+    def __init__(self, master, top_window: Toplevel, **kw):
         super().__init__(master, **kw)
+        self.top_window = top_window
         self.top_frame = ttk.Frame(self)
         self.middle_Frame = ttk.Frame(self)
         self.lower_frame = ttk.Frame(self)
@@ -1530,7 +1535,6 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             text_color=color,
             master=self.send_token_form_frame
         )
-
 
 
 
@@ -1793,8 +1797,8 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         x_axis = int((master.winfo_width() - continue_button.winfo_width())/2)
         continue_button.grid_configure(padx=x_axis, pady=notif_pady)
 
-        master.bind('<Return>', lambda event: continue_button.invoke())
-        master.bind('<KP_Enter>', lambda event: continue_button.invoke())
+        self.top_window.bind('<Return>', lambda event: continue_button.invoke())
+        self.top_window.bind('<KP_Enter>', lambda event: continue_button.invoke())
 
     def add_send_token_form_frame(self):
         """
@@ -1907,16 +1911,18 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             cancel_submit_frame,
             text="SEND",
             width=cancel_button_width,
-            command=lambda: (submit_button.state(["disabled"]), send_tokens(self.send_amount_float.get(), self.send_amount_fee_float.get(), self.wallet_address_text.get(), self.wallet_password_text.get(), self),
+            command=lambda: (submit_button.state(["disabled"]),send_tokens(self.send_amount_float.get(), self.send_amount_fee_float.get(), self.wallet_address_text.get(), self.wallet_password_text.get(), self),
                              sending_label.grid(row=10, sticky=N), root.update(),sending_label.grid_configure(padx=get_padx(self.send_token_form_frame, sending_label))),
             default="active",
             style="submit.TButton"
         )
         submit_button.grid(row=0, column=1, sticky=E)
 
+        self.top_window.bind('<Return>', lambda event: submit_button.invoke())
+        self.top_window.bind('<KP_Enter>', lambda event: submit_button.invoke())
 
-        self.bind('<Return>', lambda event: submit_button.invoke())
-        self.bind('<KP_Enter>', lambda event: submit_button.invoke())
+        # self.top_window.bind('<Return>', lambda event: [self.top_window.unbind('<Return>'), self.top_window.unbind('<KP_Enter>'),submit_button.invoke()])
+        # self.top_window.bind('<KP_Enter>', lambda event: [self.top_window.unbind('<Return>'), self.top_window.unbind('<KP_Enter>'),submit_button.invoke()])
 
     def add_reserve_token_form_frame(self):
 
@@ -2041,8 +2047,8 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             style="submit.TButton"
         )
         submit_button.grid(row=0, column=1, sticky=E)
-        self.bind('<Return>', lambda event: submit_button.invoke())
-        self.bind('<KP_Enter>', lambda event: submit_button.invoke())
+        self.top_window.bind('<Return>', lambda event: submit_button.invoke())
+        self.top_window.bind('<KP_Enter>', lambda event: submit_button.invoke())
 
 
 
