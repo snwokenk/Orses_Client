@@ -1088,6 +1088,7 @@ class BaseLoggedInWindow(Toplevel):
 
         main_menu_frame = MainWalletMenuFrame(
             self.notebookwidget,
+            top_window=self,
             width=self.middle_frame_width,
             height=self.middle_frame_height
         )
