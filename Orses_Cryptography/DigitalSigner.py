@@ -1,6 +1,7 @@
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
-from Crypto.PublicKey import RSA
+from Crypto.PublicKey import ECC
+from Crypto.Signature import DSS
 
 from Orses_Cryptography import PKIGeneration, Decryption
 from Orses_Util import FileAction as FName
@@ -61,7 +62,9 @@ class DigitalSigner:
 
         hash_of_message = SHA256.new(message)
 
-        digital_signature = pkcs1_15.new(self.privkey).sign(hash_of_message)
+        signer = DSS.new(self.privkey, mode="fips-186-3")
+
+        digital_signature = signer.sign(hash_of_message)
 
         return digital_signature
 
@@ -76,7 +79,9 @@ class DigitalSigner:
 
         hash_of_message = SHA256.new(message)
 
-        digital_signature = pkcs1_15.new(wallet_privkey).sign(hash_of_message)
+        signer = DSS.new(wallet_privkey, mode="fips-186-3")
+
+        digital_signature = signer.sign(hash_of_message)
         digital_signature = base64.b85encode(digital_signature).decode()
 
         return digital_signature

@@ -133,7 +133,7 @@ class User:
         user_info_dict["username"] = self.username
         user_info_dict["client_id"] = self.client_id
         user_info_dict["creation_time"] = self.creation_time
-        user_info_dict["pubkey_hex"] = self.pubkey.hex()
+        user_info_dict["pubkey_hex"] = pki.load_pub_key(x_y_only=True)
         user_info_dict["encrypted_private_key"] = pki.load_priv_key(importedKey=False, encrypted=True)
 
         with open(exp_path, "w") as outfile:

@@ -1,8 +1,11 @@
-from Crypto.Signature import pkcs1_15
+from Crypto.Signature import pkcs1_15, DSS
 from Crypto.Hash import SHA256
-from Crypto.PublicKey import RSA
+from Crypto.PublicKey import RSA, ECC
+
+#todo: reimplement feautures using RSA
 
 import base64
+
 
 class DigitalSignerValidator:
 
@@ -20,6 +23,11 @@ class DigitalSignerValidator:
         :param pubkey: hex or bytes representation of key
         :return: None
         """
+
+        # new implementation public key is two numbers {"x": base85 string, "y": base85 string}
+        # this string can be turned back into number using:
+        # x_int = base64.b85decode(string.encode())
+        # x_int = int.from_bytes(x_int, "big")
         try:
             self.pubkey = RSA.importKey(bytes.fromhex(pubkey))
         except TypeError:
