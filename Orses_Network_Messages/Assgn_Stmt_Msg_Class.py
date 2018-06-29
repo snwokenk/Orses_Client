@@ -10,7 +10,7 @@ from Crypto.Hash import SHA256, RIPEMD160
 from Orses_Cryptography.DigitalSignerValidator import DigitalSignerValidator
 from Orses_Database import Database, CreateDatabase, RetrieveData
 
-import time
+import time, base64
 
 
 # TODO: complete assgn statement class. Allow statement to be stored locally and broadcasted for verification by nodes
@@ -35,6 +35,10 @@ class AssignmentStatementValidator:
         self.timestamp = self.asgn_stmt_list[-2]
         self.timelimit = self.asgn_stmt_list[-1]
 
+    def __get_pubkey_bytes(self):
+
+        return base64.b85decode(self.sending_wallet_pubkey['x'].encode())+base64.b85decode(self.sending_wallet_pubkey['y'].encode())
+
     def check_validity(self):
         if (self.check_client_id_owner_of_wallet(),
                 self.check_signature_valid(),
@@ -46,7 +50,7 @@ class AssignmentStatementValidator:
             return False
 
     def check_client_id_owner_of_wallet(self):
-        step1 = SHA256.new(self.sending_wallet_pubkey + self.sending_client_id.encode()).digest()
+        step1 = SHA256.new(self.__get_pubkey_bytes() + self.sending_client_id.encode()).digest()
         derived_wid = "W" + RIPEMD160.new(step1).hexdigest()
 
         print("owner checkr: ", derived_wid == self.sending_wid)

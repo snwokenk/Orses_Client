@@ -11,12 +11,12 @@ from Orses_Database.UpdateData import UpdateData
 import time, collections
 
 class Wallet:
-    def __init__(self, wallet_nickname, pubkey, client_id, balance, locked_token, last_hash_state=None,
+    def __init__(self, wallet_nickname, pubkey, client_id, balance, locked_token, wallet_pki,last_hash_state=None,
                  wallet_activities=None):
         """
 
         :param wallet_nickname:
-        :param pubkey: bytes, not imported or in hex, when loading must convert back to bytes using bytes.fromhex()
+        :param pubkey: python dict containing {'x': base85 string, 'y': base85 string} turned into ints for use ECDSA
         :param client_id:
         :param balance:
         :param locked_token:
@@ -29,6 +29,7 @@ class Wallet:
         self.balance = balance
         self.locked_token_balance = locked_token
         self.wallet_id = None
+        self.wallet_pki = wallet_pki
         self.wallet_pub_key = pubkey
         self.client_id_of_owner = client_id
         self.activities = dict() if not isinstance(wallet_activities, dict) else wallet_activities
@@ -44,7 +45,8 @@ class Wallet:
         :return:
         """
 
-        step1 = SHA256.new(pubkey + self.client_id_of_owner.encode()).digest()
+        step1 = SHA256.new(self.wallet_pki.load_pub_key(importedKey=False, user_or_wallet="wallet") +
+                           self.client_id_of_owner.encode()).digest()
         self.wallet_id = "W" + RIPEMD160.new(step1).hexdigest()
 
     def get_wallet_nickname(self):
@@ -86,7 +88,7 @@ class Wallet:
     def get_wallet_pub_key(self):
         """
         returns the hex representation of pub key
-        :return: string, hexadecimal self.wallet_pub_key
+        :return: python dict: {"x": base85 string, "y": base85 string}
         """
         return self.wallet_pub_key
 
@@ -133,7 +135,7 @@ class Wallet:
             isinstance(new_list[1], int) else None
 
             current_time_reserved = int(time.time()) - new_list[0] if minimum_time_reserved is not None else None
-
+            print(current_time_reserved)
             if current_time_reserved:
 
                 # USE THIS FOR TESTING PURPOSES
@@ -270,7 +272,7 @@ class Wallet:
             "balance": self.balance,
             "locked_token_balance": self.locked_token_balance,
             "wallet_id": self.wallet_id,
-            "wallet_pubkey": self.wallet_pub_key.hex(),
+            "wallet_pubkey": self.wallet_pub_key,
             "wallet_owner": self.client_id_of_owner,
             "timestamp_of_creation": self.timestamp_of_creation,
             "activities": self.activities,
@@ -302,7 +304,7 @@ class Wallet:
         return True
 
     @staticmethod
-    def load_wallet_details(wallet_id, wallet_nickname, password):
+    def load_wallet_details(wallet_id, wallet_nickname, password, walletpki):
         wallet_details = FileAction.FileAction.open_file_from_json(filename=wallet_id,
                                                                    in_folder=Filenames_VariableNames.wallet_details_folder)
         wallet_details = [bytes.fromhex(i) for i in wallet_details]
@@ -316,10 +318,12 @@ class Wallet:
         details = wallet_details["details"]
         last_hash_state = wallet_details["last_hash_state"]
 
-        wallet = Wallet(pubkey=bytes.fromhex(details["wallet_pubkey"]), balance=details["balance"],
+        print("in wallet.py, pubkey", details["wallet_pubkey"])
+
+        wallet = Wallet(pubkey=details["wallet_pubkey"], balance=details["balance"],
                         client_id=details["wallet_owner"], locked_token=details["locked_token_balance"],
                         wallet_nickname=wallet_nickname, last_hash_state=last_hash_state,
-                        wallet_activities=details["activities"])
+                        wallet_activities=details["activities"], wallet_pki=walletpki)
         wallet.is_wallet_blockchain_connected = details["is_bk_conn"]
         wallet.when_wallet_bk_connected = details["when_bk_conn"]
 

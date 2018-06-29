@@ -1,6 +1,6 @@
 from Orses_Database.Database import Sqlite3Database
 from Orses_Util import Filenames_VariableNames
-
+import json
 
 class StoreData:
 
@@ -32,6 +32,8 @@ class StoreData:
         :param wallet_balance: float free balance
         :return: bool, True if successful
         """
+
+        wallet_pubkey = json.dumps(wallet_pubkey)
 
         # insert in general wallet database for all wallets on local machine
         db = Sqlite3Database(dbName=Filenames_VariableNames.wallet_id_dbname,

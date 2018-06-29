@@ -377,8 +377,8 @@ class User:
 
         return None
 
-    def make_wallet_not_bk_connected(self, tx_hash_of_trr, fee, wallet_password, veri_node_proxies):
-        if self.wallet_service_instance.wallet_instance.check_if_token_revoke_request_allowed() is True:
+    def make_wallet_not_bk_connected(self, tx_hash_of_trr, fee, wallet_password, veri_node_proxies, testing=False):
+        if self.wallet_service_instance.wallet_instance.check_if_token_revoke_request_allowed() is True or testing:
             token_revoke_request = self.wallet_service_instance.become_not_bk_connected(
                 tx_hash_trr=tx_hash_of_trr,
                 fee=fee,

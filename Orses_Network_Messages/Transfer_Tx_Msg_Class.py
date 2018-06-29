@@ -2,7 +2,7 @@ from Crypto.Hash import SHA256, RIPEMD160
 
 from Orses_Cryptography.DigitalSignerValidator import DigitalSignerValidator
 
-import time, json
+import time, json, base64
 
 
 class TransferTransactionValidator:
@@ -17,6 +17,11 @@ class TransferTransactionValidator:
         self.timestamp = transfer_tx_dict["ttx"]["time"]
         self.timelimit = timelimit
 
+    def __get_pubkey_bytes(self):
+
+        return base64.b85decode(self.sending_wallet_pubkey['x'].encode())+base64.b85decode(self.sending_wallet_pubkey['y'].encode())
+
+
     def check_validity(self):
         if (self.check_client_id_owner_of_wallet(),
                 self.check_signature_valid(),
@@ -28,7 +33,7 @@ class TransferTransactionValidator:
             return False
 
     def check_client_id_owner_of_wallet(self):
-        step1 = SHA256.new(self.sending_wallet_pubkey + self.sending_client_id.encode()).digest()
+        step1 = SHA256.new(self.__get_pubkey_bytes() + self.sending_client_id.encode()).digest()
         derived_wid = "W" + RIPEMD160.new(step1).hexdigest()
 
         print("owner checkr: ", derived_wid == self.sending_wid)

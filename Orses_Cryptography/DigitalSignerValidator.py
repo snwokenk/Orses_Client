@@ -1,4 +1,4 @@
-from Crypto.Signature import pkcs1_15, DSS
+from Crypto.Signature import DSS
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA, ECC
 
@@ -11,8 +11,11 @@ class DigitalSignerValidator:
 
     def __init__(self,  pubkey):
         """
+
+        to turn pubkey to
         used to validate signature of message
-        :param pubkey:
+        :param pubkey: dict {"x": base85encoded string, "y": same as x}
+
         """
         self.pubkey = None
         self.__import_pubkey(pubkey)
@@ -63,14 +66,25 @@ class DigitalSignerValidator:
             return True
 
     @staticmethod
-    def validate_wallet_signature(msg, wallet_pubkey, signature):
+    def validate_wallet_signature(msg, wallet_pubkey: dict, signature):
+        """
 
+        :param msg:
+        :param wallet_pubkey:
+        :param signature:
+        :return:
+        """
+        try:
+            x_int = base64.b85decode(wallet_pubkey["x"].encode())
+            x_int = int.from_bytes(x_int, "big")
+
+            y_int = base64.b85decode(wallet_pubkey["y"].encode())
+            y_int = int.from_bytes(y_int, "big")
+        except KeyError:
+            return False
 
         signature = signature.encode()
         signature = base64.b85decode(signature)
-
-        if isinstance(wallet_pubkey, bytes):
-            wallet_pubkey = RSA.importKey(wallet_pubkey)
 
         # if it a string
         try:
@@ -79,7 +93,9 @@ class DigitalSignerValidator:
             hash_of_message = SHA256.new(msg.encode())
 
         try:
-            pkcs1_15.new(wallet_pubkey).verify(hash_of_message, signature=signature)
+            wallet_pubkey = ECC.construct(point_x=x_int, point_y=y_int, curve="P-256").public_key()
+            verifier = DSS.new(wallet_pubkey, mode="fips-186-3")
+            verifier.verify(hash_of_message, signature=signature)
         except ValueError:
             return False
         else:

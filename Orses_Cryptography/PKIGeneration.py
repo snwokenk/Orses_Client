@@ -26,6 +26,7 @@ class PKI:
         if overwrite is False and self.load_pub_key():
             return "Keys under that username and client id already exist"
 
+        # print("numbers when generate: x {}, y{}\n".format(self.combinedkey.pointQ.x,self.combinedkey.pointQ.y))
         x_coord = int(self.combinedkey.pointQ.x).to_bytes(length=32, byteorder="big")
         y_coord = int(self.combinedkey.pointQ.y).to_bytes(length=32, byteorder="big")
 
@@ -85,17 +86,19 @@ class PKI:
         # decrypt encrypted key
         decrypted_key = Decrypt(list_of_encrypted_privkey_tag_nonce_salt, password=self.password).decrypt()
         if importedKey is True and decrypted_key:
-            pubkey = self.load_pub_key(x_y_only=True)
-            x_int = base64.b85decode(pubkey["x"])
+            pubkey = self.load_pub_key(x_y_only=True, user_or_wallet=user_or_wallet)
+
+            x_int = base64.b85decode(pubkey["x"].encode())
             x_int = int.from_bytes(x_int, "big")
 
-            y_int = base64.b85decode(pubkey["y"])
+            y_int = base64.b85decode(pubkey["y"].encode())
             y_int = int.from_bytes(y_int, "big")
 
             d_int = base64.b85decode(decrypted_key)
-            y_int = int.from_bytes(d_int, "big")
+            d_int = int.from_bytes(d_int, "big")
 
-            return ECC.construct(d=d_int, point_x=x_int, point_y=y_int)
+
+            return ECC.construct(d=d_int, point_x=x_int, point_y=y_int, curve="P-256")
         else:
             return decrypted_key
 
@@ -110,10 +113,17 @@ class PKI:
 
         if not pubkey:
             return False
+
+        # turn back to original bytes from base85encoded string/bytes
         pubkey_bytes = base64.b85decode(pubkey['x'].encode())+base64.b85decode(pubkey['y'].encode())
 
         if importedKey is True and x_y_only is False:
-            return ECC.construct(point_x=pubkey["x"], point_y=pubkey["y"])
+            x_int = base64.b85decode(pubkey["x"].encode())
+            x_int = int.from_bytes(x_int, "big")
+
+            y_int = base64.b85decode(pubkey["y"].encode())
+            y_int = int.from_bytes(y_int, "big")
+            return ECC.construct(point_x=x_int, point_y=y_int, curve="P-256")
         elif x_y_only is True:
             # returns a dictionary with {"x": base85 string, "y": base85 string}
             # this string can be turned back into number using:

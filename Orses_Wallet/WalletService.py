@@ -50,8 +50,9 @@ class WalletServices:
         wl.generate_pub_priv_key(save_in_folder=Filenames_VariableNames.wallets_folder)
 
         self.wallet_instance = Wallet.Wallet(balance=balance, client_id=client_id, locked_token=locked_token,
-                                             pubkey=wl.load_pub_key(importedKey=False, user_or_wallet="wallet"),
-                                             wallet_nickname=wallet_nickname)
+                                             pubkey=wl.load_pub_key(importedKey=False, x_y_only=True,
+                                                                    user_or_wallet="wallet"),
+                                             wallet_nickname=wallet_nickname, wallet_pki=wl)
 
         self.update_associated_wallet_id_dict(wallet_nickname=wallet_nickname,
                                               wallet_id=self.wallet_instance.get_wallet_id())
@@ -62,11 +63,11 @@ class WalletServices:
         return True
 
     def load_a_wallet(self, wallet_nickname, password):
-
+        wl = WalletPKI(wallet_nickname=wallet_nickname, password=password)
         if wallet_nickname in self.associated_wallets:
             wallet_id = self.associated_wallets[wallet_nickname]
             self.wallet_instance = Wallet.Wallet.load_wallet_details(wallet_id=wallet_id, password=password,
-                                                                     wallet_nickname=wallet_nickname)
+                                                                     wallet_nickname=wallet_nickname, walletpki=wl)
             return True if self.wallet_instance else False
         else:
             return None

@@ -2,7 +2,7 @@ from Crypto.Hash import SHA256, RIPEMD160
 
 from Orses_Cryptography.DigitalSignerValidator import DigitalSignerValidator
 
-import time, json
+import time, json, base64
 
 
 class TokenRevokeRequestValidator:
@@ -18,6 +18,10 @@ class TokenRevokeRequestValidator:
         self.trr_tx_hash = tkn_rvk_dict["rvk_req"]["trr_hash"]
         pass
 
+    def __get_pubkey_bytes(self):
+
+        return base64.b85decode(self.wallet_pubkey['x'].encode())+base64.b85decode(self.wallet_pubkey['y'].encode())
+
     def check_validity(self):
         if (self.check_client_id_owner_of_wallet(),
                 self.check_signature_valid(),
@@ -31,7 +35,7 @@ class TokenRevokeRequestValidator:
             return False
 
     def check_client_id_owner_of_wallet(self):
-        step1 = SHA256.new(self.wallet_pubkey + self.client_id.encode()).digest()
+        step1 = SHA256.new(self.__get_pubkey_bytes() + self.client_id.encode()).digest()
         derived_wid = "W" + RIPEMD160.new(step1).hexdigest()
 
         print("owner check: ", derived_wid == self.wallet_id)

@@ -42,7 +42,7 @@ class DigitalSigner:
         # if it is an empty list then no key created and saved on username so generate new key
         if not privkey:
             pki.generate_pub_priv_key()
-            privkey = pki.load_priv_key()
+            privkey = pki.load_priv_key()  # loaded as a key object ready to use for signing
 
         # set self.privkey to privkey
         self.privkey = privkey

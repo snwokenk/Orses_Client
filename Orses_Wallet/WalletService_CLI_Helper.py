@@ -137,6 +137,7 @@ class WalletServiceCLI:
 
         pubkey = self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key()
         wallet_privkey = self.user.wallet_service_instance.get_privkey_of_wallet(password=password_for_wallet)
+
         if not wallet_privkey:
             return None
         msg = b'test'
