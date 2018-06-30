@@ -133,7 +133,7 @@ class User:
         user_info_dict["username"] = self.username
         user_info_dict["client_id"] = self.client_id
         user_info_dict["creation_time"] = self.creation_time
-        user_info_dict["pubkey_hex"] = pki.load_pub_key(x_y_only=True)
+        user_info_dict["pubkey_dict"] = pki.load_pub_key(x_y_only=True)
         user_info_dict["encrypted_private_key"] = pki.load_priv_key(importedKey=False, encrypted=True)
 
         with open(exp_path, "w") as outfile:
@@ -198,7 +198,7 @@ class User:
 
         # save pubkey hex to file and set pubkey, pubkey saved in hex format, self.pubkey is set to bytes format
         pub_filename = Filenames_VariableNames.pub_key_filename.format(self.username)
-        FileAction.save_json_into_file(pub_filename, python_json_serializable_object=user_data["pubkey_hex"],
+        FileAction.save_json_into_file(pub_filename, python_json_serializable_object=user_data["pubkey_dict"],
                                        in_folder=Filenames_VariableNames.users_folder)
         self.pubkey = pki.load_pub_key(importedKey=False)
 

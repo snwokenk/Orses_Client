@@ -38,6 +38,9 @@ class TokenTransferTransaction:
 
             signature = DigitalSigner.DigitalSigner.wallet_sign(message=json.dumps(transfer_tx).encode(),
                                                                 wallet_privkey=wallet_privkey)
+
+            if signature is None:
+                return {}
             tx_hash = SHA256.new(json.dumps(transfer_tx).encode()).hexdigest()
 
             transfer_tx_dict = {

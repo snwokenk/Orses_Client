@@ -99,6 +99,8 @@ class AssignmentStatement:
             # returns base64.b85encode bytes string, to decode use base64.b85decode(bytes string)
             signature = DigitalSigner.DigitalSigner.wallet_sign(message=asgn_stmt.encode(),
                                                                 wallet_privkey=wallet_privkey)
+            if signature is None:
+                return {}
 
             statement_hash = SHA256.new(asgn_stmt.encode()).hexdigest()
 

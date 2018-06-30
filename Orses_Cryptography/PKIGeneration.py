@@ -162,7 +162,7 @@ class WalletPKI(PKI):
 
 
 if __name__ == '__main__':
-    publicKey = PKI(username="snwokenk", password="7433xxxxxx")
+    publicKey = PKI(username="snwokenk", password="xxxxxx")
 
     print(publicKey.generate_pub_priv_key())
     # key = RSA.generate(3072)

@@ -53,6 +53,9 @@ class TokenReservationRequest:
 
             signature = DigitalSigner.DigitalSigner.wallet_sign(message=json.dumps(reservation_request).encode(),
                                                                 wallet_privkey=wallet_privkey)
+
+            if signature is None:
+                return {}
             tx_hash = SHA256.new(json.dumps(reservation_request).encode()).hexdigest()
 
             reservation_request_dict = {

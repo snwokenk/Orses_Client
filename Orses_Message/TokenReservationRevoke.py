@@ -50,6 +50,9 @@ class TokenReservationRevoke:
 
             signature = DigitalSigner.DigitalSigner.wallet_sign(message=json.dumps(revoke_request).encode(),
                                                                 wallet_privkey=wallet_privkey)
+
+            if signature is None:
+                return {}
             tx_hash = SHA256.new(json.dumps(revoke_request).encode()).hexdigest()
 
             revoke_request_dict = {
