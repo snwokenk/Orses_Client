@@ -48,7 +48,7 @@ class WalletServiceCLI:
             reactor_instance.callFromThread(
                 self.nm.send_assignment_statement,
                 asgn_stmt=stmt,
-                wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key().hex(),
+                wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key(),
                 reactor_instance=reactor_instance,
                 q_object_from_walletcli=q_obj
             )
@@ -97,7 +97,7 @@ class WalletServiceCLI:
                 self.nm.send_token_reservation_request,
                 tkn_rsv_req=trr,
                 reactor_instance=reactor_instance,
-                wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key().hex(),
+                wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key(),
                 q_object_from_walletcli=q_obj
             )
 
@@ -121,7 +121,7 @@ class WalletServiceCLI:
             reactor_instance.callFromThread(
                 self.nm.send_token_revoke_request,
                 tkn_rvk_req=trx,
-                wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key().hex(),
+                wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key(),
                 reactor_instance=reactor_instance,
                 q_object_from_walletcli=q_obj
 

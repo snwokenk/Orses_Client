@@ -85,6 +85,7 @@ class NetworkMessages:
 
         :param main_msg: byte string, main message
         :type main_msg: bytes
+        :param wallet_pubkey: dict
         :param initial_msg: byte string, initial message
         :param reason_msg: byte sring, reason message
         :return: a callable, the callable can be used to return a list
