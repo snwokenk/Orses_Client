@@ -71,7 +71,7 @@ class WalletServiceCLI:
                 self.nm.send_transfer_transaction,
                 transfer_tx=ttx,
                 reactor_instance=reactor_instance,
-                wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key().hex(),
+                wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key(),
                 q_object_from_walletcli=q_obj
             )
 

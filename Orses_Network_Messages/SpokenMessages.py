@@ -1,4 +1,4 @@
-import collections
+import collections, json
 
 
 class SpokenMessages:
@@ -19,10 +19,14 @@ class SpokenMessages:
 
 
         :param messages_to_be_spoken: non-dict iterable (list, set, tuple) of bytes/byte string message ie b'hello'
+        :param wallet_pubkey: {"x": base85 string, "y": base85 string}
+                To turn back into string for use
+                x_int = base64.b85decode(wallet_pubkey["x"].encode())
+                x_int = int.from_bytes(x_int, "big")
         """
         assert (isinstance(messages_to_be_spoken, collections.Iterable)), "first argument of SpokenMessages Class must " \
                                                                           "be and iterable (list, set, tuple) "
-        self.wallet_pubkey = wallet_pubkey.encode()
+        self.wallet_pubkey = json.dumps(wallet_pubkey).encode()  # {"x": base85 string, "y": base85 string}
         self.messages_to_be_spoken = iter(messages_to_be_spoken)
 
         self.messages_heard = list()
