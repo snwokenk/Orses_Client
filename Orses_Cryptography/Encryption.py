@@ -39,8 +39,12 @@ class Encrypt:
 
 class EncryptWallet(Encrypt):
 
-    def __init__(self, wallet_instance,  password):
-        super().__init__(plaintext=json.dumps(wallet_instance.get_wallet_details()).encode(), password=password)
+    def __init__(self, wallet_instance,  password, include_priv_key=False):
+        if include_priv_key:
+            plaintext = json.dumps(wallet_instance.get_wallet_details(include_enc_privkey=include_priv_key)).encode()
+        else:
+            plaintext = json.dumps(wallet_instance.get_wallet_details()).encode()
+        super().__init__(plaintext=plaintext, password=password)
 
     def encrypt(self):
 

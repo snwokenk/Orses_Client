@@ -9,8 +9,11 @@ if __name__ == '__main__':
 
     if create is True:
         user1 = User(username="test1", password="7433xxxxxx", newUser=True)
-    else:
+    elif create is False:
         user1 = User(username="test1", password="7433xxxxxx").load_user()
+    else:
+        user1 =  User(username="test1", password="7433xxxxxx").import_user()
+    print(user1)
 
     # print(user1.pubkey)
     # print("\n\n-------")
@@ -28,6 +31,16 @@ if __name__ == '__main__':
     wlci = WalletServiceCLI(user=user1)
     print("in OrsesCLITest.py Keys are validated: ", wlci.validate_wallet_keys("7433xxxxxx"))
 
+    # data1 = user1.wallet_service_instance.export_all_wallets()
+    #
+    # for i in data1:
+    #     print(f"{i}: {data1[i]}")
+    #     print()
+
+
+
+
+
     # check assignment statment
     print(user1.create_sign_asgn_stmt(receiving_wid="wfe3", password_for_wallet="7433xxxxxx", amount=1, fee=0.01))
     trr = user1.make_wallet_bk_connected(amount=251000, fee=1, wallet_password="7433xxxxxx", time_limit=86400, veri_node_proxies=["wfefddfj", "wfjkdjdfkj"])
@@ -40,6 +53,7 @@ if __name__ == '__main__':
 
     print("\nTransfer Transaction: \n")
     print(user1.create_transfer_transaction(receiving_wid="wfe34", password_for_wallet="7433xxxxxx", amount=150, fee=0.50))
+    user1.unload_wallet()
 
 
 

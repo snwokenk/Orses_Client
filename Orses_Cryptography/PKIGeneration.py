@@ -88,6 +88,8 @@ class PKI:
         if importedKey is True and decrypted_key:
             pubkey = self.load_pub_key(x_y_only=True, user_or_wallet=user_or_wallet)
 
+            print(pubkey)
+
             x_int = base64.b85decode(pubkey["x"].encode())
             x_int = int.from_bytes(x_int, "big")
 
@@ -96,7 +98,6 @@ class PKI:
 
             d_int = base64.b85decode(decrypted_key)
             d_int = int.from_bytes(d_int, "big")
-
 
             return ECC.construct(d=d_int, point_x=x_int, point_y=y_int, curve="P-256")
         else:
@@ -159,6 +160,16 @@ class WalletPKI(PKI):
         FileAction.save_json_into_file(self.privkey_file,
                                        python_json_serializable_object=encrypted_key_list,
                                        in_folder=save_in_folder)
+
+    def save_imported_privkey(self, privkey):
+        FileAction.save_json_into_file(self.privkey_file,
+                                       python_json_serializable_object=privkey,
+                                       in_folder=Filenames_VariableNames.wallets_folder)
+
+    def save_imported_pubkey(self, pubkey):
+        FileAction.save_json_into_file(self.pubkey_file,
+                                       python_json_serializable_object=pubkey,
+                                       in_folder=Filenames_VariableNames.wallets_folder)
 
 
 if __name__ == '__main__':

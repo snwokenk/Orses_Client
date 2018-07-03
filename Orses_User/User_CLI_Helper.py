@@ -51,8 +51,6 @@ class UserCLI:
         elif user is None:
             return None
 
-
-
         input("Press Enter To Continue")
         call("clear")
 

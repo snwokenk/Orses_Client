@@ -40,6 +40,10 @@ class WalletCLI:
 
         return self.user.load_wallet(wallet_nickname=wallet_nickname, password=wallet_password)
 
+    def unload_wallet(self):
+
+        self.user.unload_wallet()
+
 
     def list_wallets(self):
         call("clear")

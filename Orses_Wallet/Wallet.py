@@ -263,9 +263,7 @@ class Wallet:
             d["vnode_proxies"] = tx_obj["v_node_proxies"]
             self.activities.update({act_hash: d})
 
-
-
-    def get_wallet_details(self):
+    def get_wallet_details(self, include_enc_privkey=False):
 
         wallet_details = {"details": {
             "wallet_nickname": self.wallet_nickname,
@@ -283,11 +281,27 @@ class Wallet:
         self.last_saved_hash_state = SHA256.new(json.dumps(wallet_details["details"]).encode()).hexdigest()
         wallet_details["last_hash_state"] = self.last_saved_hash_state
 
+        if include_enc_privkey is True:
+            wallet_details["enc_privkey"] = self.wallet_pki.load_priv_key(
+                importedKey=False,
+                encrypted=True,
+                user_or_wallet="wallet"
+            )
+
         return wallet_details
 
-    def save_wallet_details(self, password, username=None):
+    def save_wallet_details(self, password, username=None, get_wallet_details=False):
 
-        encrypted_details = EncryptWallet(wallet_instance=self, password=password).encrypt()
+        encrypted_details = EncryptWallet(
+            wallet_instance=self,
+            password=password,
+            include_priv_key=get_wallet_details
+        ).encrypt()
+
+        if get_wallet_details is True:
+            return encrypted_details
+
+
 
         FileAction.FileAction.save_json_into_file(filename=self.wallet_id,
                                                   python_json_serializable_object=encrypted_details,
@@ -304,7 +318,16 @@ class Wallet:
         return True
 
     @staticmethod
-    def load_wallet_details(wallet_id, wallet_nickname, password, walletpki):
+    def load_wallet_details(wallet_id, wallet_nickname, password, walletpki, get_wallet_details=False):
+        """
+
+        :param wallet_id:
+        :param wallet_nickname:
+        :param password:
+        :param walletpki:
+        :param get_wallet_details: if true will return the excrypted wallet details
+        :return:
+        """
         wallet_details = FileAction.FileAction.open_file_from_json(filename=wallet_id,
                                                                    in_folder=Filenames_VariableNames.wallet_details_folder)
         wallet_details = [bytes.fromhex(i) for i in wallet_details]
@@ -314,6 +337,11 @@ class Wallet:
             return False
 
         wallet_details = json.loads(wallet_details.decode())
+
+        print("In wallet.py, in load_wallet_details, print wallet_details: \n-\n", [i for i in wallet_details], "\n\n---")
+
+        if get_wallet_details is True:
+            return wallet_details
 
         details = wallet_details["details"]
         last_hash_state = wallet_details["last_hash_state"]

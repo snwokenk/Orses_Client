@@ -33,6 +33,8 @@ class WalletServices:
         else:
             self.associated_wallets = {}
 
+        print("in walletservice.py, _get_associated_wallets: ", self.associated_wallets)
+
     def get_associated_wallet_ids(self):
         return self.associated_wallets
 
@@ -62,15 +64,99 @@ class WalletServices:
         self.associated_wallets[wallet_nickname] = self.wallet_instance.get_wallet_id()
         return True
 
-    def load_a_wallet(self, wallet_nickname, password):
+    def load_a_wallet(self, wallet_nickname, password, get_wallet_details=False):
+        """
+
+        :param wallet_nickname:
+        :param password:
+        :param get_wallet_details: if this is true, only get the details of the wallet in a dictionary
+        :return:
+        """
         wl = WalletPKI(wallet_nickname=wallet_nickname, password=password)
         if wallet_nickname in self.associated_wallets:
             wallet_id = self.associated_wallets[wallet_nickname]
-            self.wallet_instance = Wallet.Wallet.load_wallet_details(wallet_id=wallet_id, password=password,
-                                                                     wallet_nickname=wallet_nickname, walletpki=wl)
+            self.wallet_instance = Wallet.Wallet.load_wallet_details(
+                wallet_id=wallet_id,
+                password=password,
+                wallet_nickname=wallet_nickname,
+                walletpki=wl,
+                get_wallet_details=get_wallet_details
+            )
+
+            if get_wallet_details is True:
+                pass
+
             return True if self.wallet_instance else False
         else:
             return None
+
+    def export_all_wallets(self):
+        """
+        this will get all associated wallet datas (in its encrypted formats for inclusion in export file of user)
+
+        example of returned dict:
+        ---
+
+        # this key will always be present
+        "associated_wallets": {'test1Wallet': 'W25cb9cebc3f968d43bf6f11b0c1868fdd64dc558'}  # can have more or {}
+
+        # wallet id as key and encrypted list containing wallet details as value
+        "W25cb9cebc3f968d43bf6f11b0c1868fdd64dc558":
+        ['hex value of encrypted wallet details ', 'hex of tag', 'hex of nonce', 'hex of salt']
+
+        # key for privkey, also == to filename
+        "test1Wallet_wallet_encrypted_key":
+        ['hex value of encrypted private key( "d" variable of ECDSA key) ', 'hex of tag', 'hex of nonce', 'hex of salt']
+
+        # key for public key (pubkey also stored in wallet details. Value is dict containg "x" and  "y" ints for ECDSA
+        "test1Wallet_wallet_pubkey":
+        {'x': 'G#pAsy|5{uPtth_M_j|n*a90nFlP83`c(R1i9DK!', 'y': 'umWMsZz3P}{LWmc#pPY=$w~y4?g~XU8(aluUaILP'}
+
+        -----
+
+        if more than 1 wallet then more entries will be in following this pattern
+
+        :return:
+        """
+        wallet_detail = dict()
+        wallet_detail["associated_wallets"] = self.associated_wallets
+
+        if self.associated_wallets:
+            for i in self.associated_wallets:
+                wallet_detail[self.associated_wallets[i]] = FileAction.FileAction.open_file_from_json(
+                    filename=self.associated_wallets[i],
+                    in_folder=Filenames_VariableNames.wallet_details_folder
+                )
+                w_pki = WalletPKI(i, None)  # since no decryption is taking place password is none
+                wallet_detail[w_pki.privkey_file] = w_pki.load_priv_key(encrypted=True, user_or_wallet="wallet")
+                wallet_detail[w_pki.pubkey_file] = w_pki.load_pub_key(x_y_only=True, user_or_wallet="wallet")
+
+        return wallet_detail
+
+    def import_all_wallets(self, wallet_details_dict):
+
+        # set associated wallets and create file
+
+        username_wallets = FileAction.FileAction.save_json_into_file(
+            filename=Filenames_VariableNames.username_wallets.format(self.username),
+            python_json_serializable_object=wallet_details_dict["associated_wallets"],
+            in_folder=Filenames_VariableNames.wallet_details_folder
+        )
+        self.associated_wallets = wallet_details_dict["associated_wallets"]
+
+        # save each wallets encrypted data, privkey and pubkey in file
+        if self.associated_wallets:
+            for i in self.associated_wallets:
+                FileAction.FileAction.save_json_into_file(
+                    filename=self.associated_wallets[i],
+                    python_json_serializable_object=wallet_details_dict[self.associated_wallets[i]],
+                    in_folder=Filenames_VariableNames.wallet_details_folder
+                )
+                w_pki = WalletPKI(i, None)  # since no decryption is taking place password is none
+                w_pki.save_imported_privkey(wallet_details_dict[w_pki.privkey_file])
+                w_pki.save_imported_pubkey(wallet_details_dict[w_pki.pubkey_file])
+
+        return True
 
     def unload_wallet(self, save=False, password=None):
         if save:

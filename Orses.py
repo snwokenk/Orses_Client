@@ -144,6 +144,11 @@ def change_user(new_val):
 
 def change_wallet(new_val):
     global client_wallet
+    global client_user
+
+    if (client_user and client_wallet) and new_val is None:
+        W_CLI = WalletCLI(user=client_user)
+        W_CLI.unload_wallet()
     client_wallet = new_val
 
 

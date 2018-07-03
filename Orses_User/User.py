@@ -38,6 +38,7 @@ class User:
         self.creation_time = None
         self.pubkey = None
         self.privkey = None
+        self.pki = None
         self.newUser = newUser
         self.isNewUser = newUser
 
@@ -67,6 +68,9 @@ class User:
         elif self.newUser is True:
             pki.generate_pub_priv_key(save_in_folder=users_folder, overwrite=False)
 
+            # set self.pki
+            self.pki = pki
+
             # load public key, loaded as bytes and not key object
             self.pubkey = pki.load_pub_key(importedKey=False)
 
@@ -91,8 +95,12 @@ class User:
         return "ID-" + RIPEMD160.new(step1).hexdigest()
 
     def save_user(self):
-        StoreData.store_user_info_in_db(client_id=self.client_id, pubkey=self.pubkey.hex(), username=self.username,
-                                        timestamp_of_creation=self.creation_time)
+        StoreData.store_user_info_in_db(
+            client_id=self.client_id,
+            pubkey=json.dumps(self.pki.load_pub_key(x_y_only=True)),
+            username=self.username,
+            timestamp_of_creation=self.creation_time
+        )
 
     def load_user(self):
         user_data = RetrieveData.get_user_info(self.username)
@@ -103,7 +111,7 @@ class User:
             self.creation_time = user_data[1]
             self.pubkey = pki.load_pub_key(importedKey=False)
             self.privkey = pki.load_priv_key(importedKey=True)
-
+            self.pki = pki
             self.wallet_service_instance = WalletServices(client_id=self.client_id, user=self)
             self.associated_wallets = self.wallet_service_instance.get_associated_wallet_ids()
 
@@ -123,7 +131,7 @@ class User:
         :return:
         """
 
-        pki = PKI(username=self.username, password=self.password)
+        # pki = PKI(username=self.username, password=self.password)
         exp_path = os.path.join(pathlib.Path.home(), "Desktop", "CryptoHub_External_Files", "Exported_Accounts",
                                 self.username + ".orses")
 
@@ -133,8 +141,9 @@ class User:
         user_info_dict["username"] = self.username
         user_info_dict["client_id"] = self.client_id
         user_info_dict["creation_time"] = self.creation_time
-        user_info_dict["pubkey_dict"] = pki.load_pub_key(x_y_only=True)
-        user_info_dict["encrypted_private_key"] = pki.load_priv_key(importedKey=False, encrypted=True)
+        user_info_dict["pubkey_dict"] = self.pki.load_pub_key(x_y_only=True)
+        user_info_dict["encrypted_private_key"] = self.pki.load_priv_key(importedKey=False, encrypted=True)
+        user_info_dict["wallet_info"] = self.wallet_service_instance.export_all_wallets()
 
         with open(exp_path, "w") as outfile:
             json.dump(user_info_dict, outfile)
@@ -166,8 +175,6 @@ class User:
         except FileNotFoundError:
             return None
 
-        # instantiate a pki class
-        pki = PKI(username=self.username, password=self.password)
 
         # get privkey name for user to see if any file exist
         priv_filename = Filenames_VariableNames.priv_key_filename.format(self.username)
@@ -182,7 +189,16 @@ class User:
         if different_username:
             self.username = different_username
             priv_filename = Filenames_VariableNames.priv_key_filename.format(self.username)
-            pki = PKI(username=self.username, password=self.password)
+
+        # instantiate a pki class
+        pki = PKI(username=self.username, password=self.password)
+
+        # save pubkey  to file and set self.pubkey, pubkey saved as python dict {"x": base85 str, "y": base85 str}
+        # self.pubkey is set to bytes format
+        pub_filename = Filenames_VariableNames.pub_key_filename.format(self.username)
+        FileAction.save_json_into_file(pub_filename, python_json_serializable_object=user_data["pubkey_dict"],
+                                       in_folder=Filenames_VariableNames.users_folder)
+        self.pubkey = pki.load_pub_key(importedKey=False)
 
         # save and load privkey
         FileAction.save_json_into_file(priv_filename,
@@ -196,12 +212,10 @@ class User:
             FileAction.delete_file(filename=priv_filename, in_folder=Filenames_VariableNames.users_folder)
             return False
 
-        # save pubkey hex to file and set pubkey, pubkey saved in hex format, self.pubkey is set to bytes format
-        pub_filename = Filenames_VariableNames.pub_key_filename.format(self.username)
-        FileAction.save_json_into_file(pub_filename, python_json_serializable_object=user_data["pubkey_dict"],
-                                       in_folder=Filenames_VariableNames.users_folder)
-        self.pubkey = pki.load_pub_key(importedKey=False)
 
+
+        # set self.pki
+        self.pki = pki
 
         # set client id
         self.client_id = user_data["client_id"]
@@ -211,6 +225,7 @@ class User:
 
         # create wallet instance
         self.wallet_service_instance = WalletServices(client_id=self.client_id, user=self)
+        self.wallet_service_instance.import_all_wallets(wallet_details_dict=user_data["wallet_info"])
         self.associated_wallets = self.wallet_service_instance.get_associated_wallet_ids()
 
         # create database and save (will also create general client id and wallet id info database)
@@ -272,7 +287,19 @@ class User:
             return None
 
     def unload_wallet(self, will_save=False, password=None):
-        self.wallet_service_instance.unload_wallet(save=will_save, password=password)
+        if self.wallet_service_instance:
+            wallet_data = self.wallet_service_instance.wallet_instance.get_wallet_details()
+            wallet_data = wallet_data["details"]
+
+            StoreData.store_wallet_info_in_db(wallet_id=wallet_data["wallet_id"],
+                                              wallet_owner=wallet_data["wallet_owner"],
+                                              wallet_pubkey=wallet_data["wallet_pubkey"],
+                                              wallet_nickname=wallet_data["wallet_nickname"],
+                                              timestamp_of_creation=wallet_data["timestamp_of_creation"],
+                                              wallet_locked_balance=wallet_data["locked_token_balance"],
+                                              wallet_balance=wallet_data["balance"],
+                                              username=self.username)
+            self.wallet_service_instance.unload_wallet(save=will_save, password=password)
 
     def check_balance_of_loaded_wallet(self):
 
