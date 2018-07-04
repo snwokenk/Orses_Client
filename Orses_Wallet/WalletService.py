@@ -25,7 +25,7 @@ class WalletServices:
         """
 
         filename = Filenames_VariableNames.username_wallets.format(self.username)
-        folder_name = Filenames_VariableNames.wallet_details_folder
+        folder_name = self.user.fl.get_wallets_folder_path()
         username_wallets = FileAction.FileAction.open_file_from_json(filename=filename,
                                                                      in_folder=folder_name)
         if username_wallets:
@@ -41,15 +41,15 @@ class WalletServices:
     def update_associated_wallet_id_dict(self, wallet_nickname, wallet_id):
         self.associated_wallets[wallet_nickname] = wallet_id
         filename = Filenames_VariableNames.username_wallets.format(self.username)
-        folder_name = Filenames_VariableNames.wallet_details_folder
+        folder_name = self.user.fl.get_wallets_folder_path()
         FileAction.FileAction.save_json_into_file(filename=filename,
                                                   python_json_serializable_object=self.associated_wallets,
                                                   in_folder=folder_name)
 
     def create_wallet(self, wallet_nickname, balance, client_id, locked_token, password):
 
-        wl = WalletPKI(wallet_nickname=wallet_nickname, password=password)
-        wl.generate_pub_priv_key(save_in_folder=Filenames_VariableNames.wallets_folder)
+        wl = WalletPKI(wallet_nickname=wallet_nickname, password=password, user_instance=self.user)
+        wl.generate_pub_priv_key(save_in_folder=self.user.fl.get_wallets_folder_path())
 
         self.wallet_instance = Wallet.Wallet(balance=balance, client_id=client_id, locked_token=locked_token,
                                              pubkey=wl.load_pub_key(importedKey=False, x_y_only=True,
@@ -59,7 +59,7 @@ class WalletServices:
         self.update_associated_wallet_id_dict(wallet_nickname=wallet_nickname,
                                               wallet_id=self.wallet_instance.get_wallet_id())
 
-        self.wallet_instance.save_wallet_details(password=password)
+        self.wallet_instance.save_wallet_details(password=password, user_instance=self.user)
 
         self.associated_wallets[wallet_nickname] = self.wallet_instance.get_wallet_id()
         return True
@@ -72,7 +72,7 @@ class WalletServices:
         :param get_wallet_details: if this is true, only get the details of the wallet in a dictionary
         :return:
         """
-        wl = WalletPKI(wallet_nickname=wallet_nickname, password=password)
+        wl = WalletPKI(wallet_nickname=wallet_nickname, password=password, user_instance=self.user)
         if wallet_nickname in self.associated_wallets:
             wallet_id = self.associated_wallets[wallet_nickname]
             self.wallet_instance = Wallet.Wallet.load_wallet_details(
@@ -80,8 +80,11 @@ class WalletServices:
                 password=password,
                 wallet_nickname=wallet_nickname,
                 walletpki=wl,
-                get_wallet_details=get_wallet_details
+                get_wallet_details=get_wallet_details,
+                user_instance=self.user
             )
+
+            print("in walletservice.py: ", self.wallet_instance)
 
             if get_wallet_details is True:
                 pass
@@ -125,9 +128,9 @@ class WalletServices:
             for i in self.associated_wallets:
                 wallet_detail[self.associated_wallets[i]] = FileAction.FileAction.open_file_from_json(
                     filename=self.associated_wallets[i],
-                    in_folder=Filenames_VariableNames.wallet_details_folder
+                    in_folder=self.user.fl.get_wallets_folder_path()
                 )
-                w_pki = WalletPKI(i, None)  # since no decryption is taking place password is none
+                w_pki = WalletPKI(i, None, user_instance=self.user)  # since no decryption is taking place password is none
                 wallet_detail[w_pki.privkey_file] = w_pki.load_priv_key(encrypted=True, user_or_wallet="wallet")
                 wallet_detail[w_pki.pubkey_file] = w_pki.load_pub_key(x_y_only=True, user_or_wallet="wallet")
 
@@ -137,10 +140,10 @@ class WalletServices:
 
         # set associated wallets and create file
 
-        username_wallets = FileAction.FileAction.save_json_into_file(
+        FileAction.FileAction.save_json_into_file(
             filename=Filenames_VariableNames.username_wallets.format(self.username),
             python_json_serializable_object=wallet_details_dict["associated_wallets"],
-            in_folder=Filenames_VariableNames.wallet_details_folder
+            in_folder=self.user.fl.get_wallets_folder_path()
         )
         self.associated_wallets = wallet_details_dict["associated_wallets"]
 
@@ -152,7 +155,7 @@ class WalletServices:
                     python_json_serializable_object=wallet_details_dict[self.associated_wallets[i]],
                     in_folder=Filenames_VariableNames.wallet_details_folder
                 )
-                w_pki = WalletPKI(i, None)  # since no decryption is taking place password is none
+                w_pki = WalletPKI(i, None, user_instance=self.user)  # since no decryption is taking place password is none
                 w_pki.save_imported_privkey(wallet_details_dict[w_pki.privkey_file])
                 w_pki.save_imported_pubkey(wallet_details_dict[w_pki.pubkey_file])
 
@@ -162,13 +165,13 @@ class WalletServices:
         if save:
             assert password is not None, "'password' parameter must not be None if 'save' parameter is True"
             if isinstance(self.wallet_instance, Wallet.Wallet):
-                self.wallet_instance.save_wallet_details(password=password)
+                self.wallet_instance.save_wallet_details(password=password, user_instance=self.user)
 
         self.wallet_instance = None
 
     def update_save_wallet_details(self, password):
 
-        self.wallet_instance.save_wallet_details(password=password, username=self.username)
+        self.wallet_instance.save_wallet_details(password=password, username=self.username, user_instance=self.user)
 
     def return_wallet_details(self):
 
@@ -180,8 +183,11 @@ class WalletServices:
     def get_privkey_of_wallet(self, password, imported_key=True):
 
         if isinstance(self.wallet_instance, Wallet.Wallet):
-            return WalletPKI(wallet_nickname=self.wallet_instance.get_wallet_nickname(),
-                             password=password).load_priv_key(importedKey=imported_key, user_or_wallet="wallet")
+            return WalletPKI(
+                wallet_nickname=self.wallet_instance.get_wallet_nickname(),
+                password=password,
+                user_instance=self.user
+            ).load_priv_key(importedKey=imported_key, user_or_wallet="wallet")
         else:
             return b''
 

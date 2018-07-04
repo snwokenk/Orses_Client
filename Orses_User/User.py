@@ -1,6 +1,5 @@
 from Orses_Cryptography.PKIGeneration import PKI
-from Orses_Util.Filenames_VariableNames import users_folder
-from Orses_Util.FileAction import FileAction
+# from Orses_Util.Filenames_VariableNames import users_folder
 from Orses_Wallet.WalletService import WalletServices
 from Orses_Wallet.Wallet import Wallet
 from Orses_Database.CreateDatabase import CreateDatabase
@@ -39,6 +38,7 @@ class User:
         self.pubkey = None
         self.privkey = None
         self.pki = None
+        self.fl = None  # store FileAction class
         self.newUser = newUser
         self.isNewUser = newUser
 
@@ -55,8 +55,10 @@ class User:
         :return: none
         """
 
+        self.fl = FileAction(username=self.username)
+
         # create an instance of PKI class (uses RSA 3072)
-        pki = PKI(username=self.username, password=self.password)
+        pki = PKI(username=self.username, password=self.password, user_instance=self)
 
         # try to load pub key, it should return false if new user, if it returns pubkey then user already created
         rsp = pki.load_pub_key()
@@ -66,7 +68,7 @@ class User:
             return
 
         elif self.newUser is True:
-            pki.generate_pub_priv_key(save_in_folder=users_folder, overwrite=False)
+            pki.generate_pub_priv_key(save_in_folder=self.fl.get_keys_folder_path(), overwrite=False)
 
             # set self.pki
             self.pki = pki
@@ -83,7 +85,7 @@ class User:
             # if the a new user then creation time is now and new databases are created with initial info stored
 
             self.creation_time = int(time.time())
-            CreateDatabase().create_user_db(self.username)
+            CreateDatabase(user_instance=self)
             self.save_user()
 
         elif self.isNewUser is False:
@@ -99,13 +101,14 @@ class User:
             client_id=self.client_id,
             pubkey=json.dumps(self.pki.load_pub_key(x_y_only=True)),
             username=self.username,
-            timestamp_of_creation=self.creation_time
+            timestamp_of_creation=self.creation_time,
+            user_instance=self
         )
 
     def load_user(self):
-        user_data = RetrieveData.get_user_info(self.username)
+        user_data = RetrieveData.get_user_info(self.username, self)
 
-        pki = PKI(username=self.username, password=self.password)
+        pki = PKI(username=self.username, password=self.password, user_instance=self)
         if user_data:
             self.client_id = user_data[0]
             self.creation_time = user_data[1]
@@ -120,7 +123,7 @@ class User:
 
         if self.privkey:  # everything is well
             # creates user info database and wallet info database
-            CreateDatabase()
+            CreateDatabase(user_instance=self)
             return self
         else: # wrong password
             return False
@@ -176,9 +179,9 @@ class User:
             return None
 
 
-        # get privkey name for user to see if any file exist
+        # get privkey name for user to see if any file exist using FileAction instance fl
         priv_filename = Filenames_VariableNames.priv_key_filename.format(self.username)
-        rsp = FileAction.open_file_from_json(filename=priv_filename, in_folder=Filenames_VariableNames.users_folder)
+        rsp = self.fl.open_file_from_json(filename=priv_filename, in_folder=self.fl.get_keys_folder_path())
 
         if rsp:
             if different_username is None:
@@ -191,25 +194,25 @@ class User:
             priv_filename = Filenames_VariableNames.priv_key_filename.format(self.username)
 
         # instantiate a pki class
-        pki = PKI(username=self.username, password=self.password)
+        pki = PKI(username=self.username, password=self.password, user_instance=self)
 
         # save pubkey  to file and set self.pubkey, pubkey saved as python dict {"x": base85 str, "y": base85 str}
         # self.pubkey is set to bytes format
         pub_filename = Filenames_VariableNames.pub_key_filename.format(self.username)
         FileAction.save_json_into_file(pub_filename, python_json_serializable_object=user_data["pubkey_dict"],
-                                       in_folder=Filenames_VariableNames.users_folder)
+                                       in_folder=self.fl.get_keys_folder_path())
         self.pubkey = pki.load_pub_key(importedKey=False)
 
         # save and load privkey
         FileAction.save_json_into_file(priv_filename,
                                        python_json_serializable_object=user_data["encrypted_private_key"],
-                                       in_folder=Filenames_VariableNames.users_folder)
+                                       in_folder=self.fl.get_keys_folder_path())
 
         self.privkey = pki.load_priv_key(importedKey=True)
 
         # if priv key is false
         if not self.privkey:
-            FileAction.delete_file(filename=priv_filename, in_folder=Filenames_VariableNames.users_folder)
+            FileAction.delete_file(filename=priv_filename, in_folder=self.fl.get_keys_folder_path())
             return False
 
 
@@ -229,7 +232,7 @@ class User:
         self.associated_wallets = self.wallet_service_instance.get_associated_wallet_ids()
 
         # create database and save (will also create general client id and wallet id info database)
-        CreateDatabase().create_user_db(self.username)
+        CreateDatabase(user_instance=self)
         self.save_user()
 
         return self
@@ -263,7 +266,9 @@ class User:
                                                   timestamp_of_creation=wallet_data["timestamp_of_creation"],
                                                   wallet_locked_balance=wallet_data["locked_token_balance"],
                                                   wallet_balance=wallet_data["balance"],
-                                                  username=self.username)
+                                                  username=self.username,
+                                                  user_instance=self
+                                                  )
 
                 return True
 
@@ -298,7 +303,9 @@ class User:
                                               timestamp_of_creation=wallet_data["timestamp_of_creation"],
                                               wallet_locked_balance=wallet_data["locked_token_balance"],
                                               wallet_balance=wallet_data["balance"],
-                                              username=self.username)
+                                              username=self.username,
+                                              user_instance=self
+                                              )
             self.wallet_service_instance.unload_wallet(save=will_save, password=password)
 
     def check_balance_of_loaded_wallet(self):

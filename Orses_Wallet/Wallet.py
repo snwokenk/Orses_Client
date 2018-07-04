@@ -290,7 +290,7 @@ class Wallet:
 
         return wallet_details
 
-    def save_wallet_details(self, password, username=None, get_wallet_details=False):
+    def save_wallet_details(self, password, user_instance, username=None, get_wallet_details=False):
 
         encrypted_details = EncryptWallet(
             wallet_instance=self,
@@ -302,23 +302,23 @@ class Wallet:
             return encrypted_details
 
 
-
         FileAction.FileAction.save_json_into_file(filename=self.wallet_id,
                                                   python_json_serializable_object=encrypted_details,
-                                                  in_folder=Filenames_VariableNames.wallet_details_folder)
+                                                  in_folder=user_instance.fl.get_wallets_folder_path())
 
         if username:
             UpdateData.update_wallet_info_in_db(
                 wallet_balance=self.balance,
                 wallet_locked_balance=self.locked_token_balance,
                 wallet_id=self.wallet_id,
-                username=username
+                username=username,
+                user_instance=user_instance
 
             )
         return True
 
     @staticmethod
-    def load_wallet_details(wallet_id, wallet_nickname, password, walletpki, get_wallet_details=False):
+    def load_wallet_details(wallet_id, wallet_nickname, password, walletpki, user_instance, get_wallet_details=False):
         """
 
         :param wallet_id:
@@ -329,7 +329,8 @@ class Wallet:
         :return:
         """
         wallet_details = FileAction.FileAction.open_file_from_json(filename=wallet_id,
-                                                                   in_folder=Filenames_VariableNames.wallet_details_folder)
+                                                                   in_folder=user_instance.fl.get_wallets_folder_path())
+        print("in wallet.py, wallet folder path: ", user_instance.fl.get_wallets_folder_path())
         wallet_details = [bytes.fromhex(i) for i in wallet_details]
         wallet_details = WalletDecrypt(ciphertext_tag_nonce_salt=wallet_details, password=password).decrypt()
         if not wallet_details:

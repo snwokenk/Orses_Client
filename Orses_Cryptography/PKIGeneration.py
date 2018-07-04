@@ -13,10 +13,11 @@ import base64
 
 
 class PKI:
-    def __init__(self, username, password):
+    def __init__(self, username, password, user_instance=None):
         self.combinedkey = ECC.generate(curve="P-256")
         self.username = username
         self.password = password
+        self.user_instance =user_instance
         self.pubkey = None
         self.privkey_file = Filenames_VariableNames.priv_key_filename.format(username)
         self.pubkey_file = Filenames_VariableNames.pub_key_filename.format(username)
@@ -68,10 +69,10 @@ class PKI:
         # load encryped private key list with tag, nonce and salt
         if user_or_wallet == "user":
             list_of_encrypted_privkey_tag_nonce_salt = FileAction.open_file_from_json(
-                filename=self.privkey_file, in_folder=Filenames_VariableNames.users_folder)
+                filename=self.privkey_file, in_folder=self.user_instance.fl.get_keys_folder_path())
         else:
             list_of_encrypted_privkey_tag_nonce_salt = FileAction.open_file_from_json(
-                filename=self.privkey_file, in_folder=Filenames_VariableNames.wallets_folder)
+                filename=self.privkey_file, in_folder=self.user_instance.fl.get_wallets_folder_path())
 
         # if it is an empty list then no key created and saved on username so generate new key
         if not list_of_encrypted_privkey_tag_nonce_salt:
@@ -105,12 +106,13 @@ class PKI:
 
     def load_pub_key(self, importedKey=True, x_y_only=False, user_or_wallet="user"):
 
+
         if user_or_wallet == "user":
             pubkey = FileAction.open_file_from_json(
-                self.pubkey_file, in_folder=Filenames_VariableNames.users_folder)
+                self.pubkey_file, in_folder=self.user_instance.fl.get_keys_folder_path())
         else:
            pubkey =  FileAction.open_file_from_json(
-               self.pubkey_file, in_folder=Filenames_VariableNames.wallets_folder)
+               self.pubkey_file, in_folder=self.user_instance.fl.get_wallets_folder_path())
 
         if not pubkey:
             return False
@@ -140,7 +142,7 @@ class PKI:
 
 class WalletPKI(PKI):
 
-    def __init__(self, wallet_nickname, password):
+    def __init__(self, wallet_nickname, password, user_instance):
         """
         used to generate pki specifically for wallets
         keys are saved under wallet nickname. privkey is saved in a list [encrypted key, tag, nonce, salt]
@@ -148,7 +150,7 @@ class WalletPKI(PKI):
         :param wallet_nickname:
         :param password:
         """
-        super().__init__(username=wallet_nickname, password=password)
+        super().__init__(username=wallet_nickname, password=password, user_instance=user_instance)
         self.privkey_file = Filenames_VariableNames.wallet_priv_key_filename.format(wallet_nickname)
         self.pubkey_file = Filenames_VariableNames.wallet_pub_key_filename.format(wallet_nickname)
 
@@ -164,12 +166,12 @@ class WalletPKI(PKI):
     def save_imported_privkey(self, privkey):
         FileAction.save_json_into_file(self.privkey_file,
                                        python_json_serializable_object=privkey,
-                                       in_folder=Filenames_VariableNames.wallets_folder)
+                                       in_folder=self.user_instance.fl.get_wallets_folder_path())
 
     def save_imported_pubkey(self, pubkey):
         FileAction.save_json_into_file(self.pubkey_file,
                                        python_json_serializable_object=pubkey,
-                                       in_folder=Filenames_VariableNames.wallets_folder)
+                                       in_folder=self.user_instance.fl.get_wallets_folder_path())
 
 
 if __name__ == '__main__':

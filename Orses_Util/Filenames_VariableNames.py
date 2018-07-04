@@ -4,7 +4,6 @@ pub_key_filename = "{}_pubkey"
 username_wallets = "{}_wallets"
 wallet_details_folder = "wallet_detail"
 users_folder = "users"
-wallets_folder = "wallets"
 network_data_folder = "network_data_folder"
 username_address_list = "{}_net_address_list"
 default_addr_list = "Default_Addresses"
@@ -31,3 +30,9 @@ user_info_tname = "{}_user_info"
 
 asgn_stmt_dbname = "asgn_stmt_db"
 asgn_stmt_tname = "asgn_stmt"
+
+sandbox_folder = "sandbox_client"  # folder that holds data of user created in sandbox
+data_folder1 = "live_data_client"
+key_folder = "keys"
+user_data = "data_user"
+wallets_folder = "wallets"

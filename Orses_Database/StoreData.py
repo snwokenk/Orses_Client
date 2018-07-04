@@ -5,9 +5,9 @@ import json
 class StoreData:
 
     @staticmethod
-    def store_user_info_in_db(client_id, pubkey, username, timestamp_of_creation):
+    def store_user_info_in_db(client_id, pubkey, username, timestamp_of_creation, user_instance):
         db = Sqlite3Database(dbName=Filenames_VariableNames.user_dbname.format(username),
-                             in_folder=Filenames_VariableNames.data_folder)
+                             in_folder=user_instance.fl.get_user_data_folder_path())
 
         db.insert_into_table(tableName=Filenames_VariableNames.user_info_tname.format(username),
                              client_id=client_id, pubkey=pubkey, username=username,
@@ -17,7 +17,7 @@ class StoreData:
 
     @staticmethod
     def store_wallet_info_in_db(wallet_id, wallet_owner, wallet_pubkey, wallet_nickname, timestamp_of_creation,
-                                wallet_locked_balance, wallet_balance, username):
+                                wallet_locked_balance, wallet_balance, username, user_instance):
         """
         used to store wallet info at time of creation, stored it into 2 databases:
         1 database storing wallet info for all wallets on the local machine
@@ -37,7 +37,7 @@ class StoreData:
 
         # insert in general wallet database for all wallets on local machine
         db = Sqlite3Database(dbName=Filenames_VariableNames.wallet_id_dbname,
-                             in_folder=Filenames_VariableNames.data_folder)
+                             in_folder=user_instance.fl.get_wallets_folder_path())
 
         db.insert_into_table(tableName=Filenames_VariableNames.wallet_id_tname, wallet_id=wallet_id,
                              wallet_owner=wallet_owner, wallet_pubkey=wallet_pubkey, wallet_nickname=wallet_nickname,
@@ -48,7 +48,7 @@ class StoreData:
         # insert into username_userdata db: wallet id info table (for user specific wallets)
 
         db1 = Sqlite3Database(dbName=Filenames_VariableNames.user_dbname.format(username),
-                              in_folder=Filenames_VariableNames.data_folder)
+                              in_folder=user_instance.fl.get_user_data_folder_path())
 
         db1.insert_into_table(tableName=Filenames_VariableNames.user_wallet_tname.format(username), wallet_id=wallet_id,
                               wallet_pubkey=wallet_pubkey, wallet_nickname=wallet_nickname, timestamp_of_creation=timestamp_of_creation,

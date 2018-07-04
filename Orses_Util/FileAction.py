@@ -1,6 +1,88 @@
 import os, json, pathlib
+from Orses_Util import Filenames_VariableNames
+
 
 class FileAction:
+    def __init__(self, username=None, is_sandbox=False):
+        self.username = username
+        self.__folders_created = False
+        self.__project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.__sandbox_folder_path = os.path.join(self.__project_path, Filenames_VariableNames.sandbox_folder)
+        self.__live_folder_path = os.path.join(self.__project_path, Filenames_VariableNames.data_folder1)
+        self.__username_folder_path = None
+
+        self.create_admin_folder(is_sandbox=is_sandbox)
+
+
+    """
+    use section for creation of folders and returning of paths
+    """
+
+    def check_if_admin_folder_exist(self, is_sandbox=False):
+        if is_sandbox:
+            return os.path.isdir(self.__sandbox_folder_path)
+        else:
+            return os.path.isdir(self.__live_folder_path)
+
+    def create_admin_folder(self, is_sandbox=False):
+        if self.__folders_created is True:
+            return True
+        elif not isinstance(self.username, str):
+            return None
+
+        def create_f(f_path):
+            try:
+                os.makedirs(f_path)
+            except FileExistsError:
+                return True
+            except Exception as e:
+                print(e)
+                return False
+            else:
+                return True
+
+
+        # make sure data folder or sandbox folder is created
+        if is_sandbox is True:
+            is_created = create_f(self.__sandbox_folder_path)
+            self.__username_folder_path = os.path.join(self.__sandbox_folder_path, self.username)
+        else:
+            is_created = create_f(self.__live_folder_path)
+            self.__username_folder_path = os.path.join(self.__live_folder_path, self.username)
+
+
+        is_created1 = create_f(self.__username_folder_path)
+        self.__folders_created = True if (is_created and is_created1) else False
+
+        return self.__folders_created
+
+    def get_username_folder_path(self):
+        if isinstance(self.__username_folder_path, str) and self.__folders_created:
+            return self.__username_folder_path
+
+    def get_live_data_folder_path(self):
+        if isinstance(self.__live_folder_path, str) and self.__folders_created:
+            return self.__live_folder_path
+
+    def get_sandbox_data_folder_path(self):
+        if isinstance(self.__sandbox_folder_path, str) and self.__folders_created:
+            return self.__sandbox_folder_path
+
+    def get_keys_folder_path(self):
+        rsp = os.path.join(self.get_username_folder_path(), Filenames_VariableNames.key_folder)
+        return rsp
+
+    def get_wallets_folder_path(self):
+        """
+        folder where admin's wallets are stored
+        :return:
+        """
+        return os.path.join(self.__username_folder_path, Filenames_VariableNames.wallets_folder)
+
+    def get_user_data_folder_path(self):
+        return os.path.join(self.__username_folder_path, Filenames_VariableNames.user_data)
+
+
 
     @staticmethod
     def create_folder(folder_name):
