@@ -84,7 +84,6 @@ class WalletServices:
                 user_instance=self.user
             )
 
-            print("in walletservice.py: ", self.wallet_instance)
 
             if get_wallet_details is True:
                 pass

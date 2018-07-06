@@ -1535,6 +1535,8 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             text = "Tokens Sent"
             color = "green"
 
+            #
+
         self.insert_notification_label(
             text=text,
             font_class=notif_label_font,

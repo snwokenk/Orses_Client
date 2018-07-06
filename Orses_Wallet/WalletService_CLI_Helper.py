@@ -153,6 +153,8 @@ class WalletServiceCLI:
         print("Last Hash State of Wallet: ",
               self.user.wallet_service_instance.wallet_instance.get_last_saved_hash_state())
 
+        print(dict_of_activities)
+
         for i in dict_of_activities:
             print("\n-----\n")
             print(i, ": ", dict_of_activities[i])

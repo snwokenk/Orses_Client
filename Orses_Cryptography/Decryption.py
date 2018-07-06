@@ -20,7 +20,7 @@ class Decrypt:
         :param username: username which keys were stored
         :param password: password used in pbkdf for key derivation
         """
-        print("here", ciphertext_tag_nonce_salt)
+        print("in Decryption.py, ciphertext", ciphertext_tag_nonce_salt)
         self.password = password
         self.salt = ciphertext_tag_nonce_salt[3]
         self.key_object = PasswordKey(password=self.password, salt=self.salt)

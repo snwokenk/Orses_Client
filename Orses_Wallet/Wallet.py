@@ -330,11 +330,10 @@ class Wallet:
         """
         wallet_details = FileAction.FileAction.open_file_from_json(filename=wallet_id,
                                                                    in_folder=user_instance.fl.get_wallets_folder_path())
-        print("in wallet.py, wallet folder path: ", user_instance.fl.get_wallets_folder_path())
+        # print("in wallet.py, wallet folder path: ", user_instance.fl.get_wallets_folder_path())
         wallet_details = [bytes.fromhex(i) for i in wallet_details]
         wallet_details = WalletDecrypt(ciphertext_tag_nonce_salt=wallet_details, password=password).decrypt()
         if not wallet_details:
-            print("here")
             return False
 
         wallet_details = json.loads(wallet_details.decode())

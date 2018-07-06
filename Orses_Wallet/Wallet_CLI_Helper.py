@@ -44,7 +44,6 @@ class WalletCLI:
 
         self.user.unload_wallet()
 
-
     def list_wallets(self):
         call("clear")
         print("\n\n\t* Welcome To The Command Line Interface Of The CryptoHub Blockchain Client *\n\n")
@@ -55,10 +54,3 @@ class WalletCLI:
         input("\nPress Enter To Continue\n")
         call("clear")
 
-    def change_wallet_password(self):
-
-        """
-        used to
-        :return:
-        """
-        pass

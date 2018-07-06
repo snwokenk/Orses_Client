@@ -89,7 +89,7 @@ class PKI:
         if importedKey is True and decrypted_key:
             pubkey = self.load_pub_key(x_y_only=True, user_or_wallet=user_or_wallet)
 
-            print(pubkey)
+            print("in PKIGeneration.py, load_privkey", pubkey)
 
             x_int = base64.b85decode(pubkey["x"].encode())
             x_int = int.from_bytes(x_int, "big")
