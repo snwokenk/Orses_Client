@@ -181,6 +181,9 @@ WSCLI = WalletServiceCLI(user=client_user)
 windows_dict = dict()
 
 
+"""
+**** Interface For Creating A User, Loading A User, Importing A User
+"""
 class UserAndWalletCommands:
 
     @staticmethod
