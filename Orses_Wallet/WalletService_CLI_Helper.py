@@ -31,6 +31,10 @@ class WalletServiceCLI:
         if self.nm:
             self.nm.get_active_peers()
 
+    def validate_balance_on_blockchain(self):
+        # todo: sep 28 2018, Write this logic
+        pass
+
     def send_tokens(self, amount, fee, receiving_wid, password_for_wallet, q_obj, reactor_instance=None):
 
         assert (amount > 0 and fee > 0), "Amount of Tokens To Send MUST Not Be Negative"
@@ -110,7 +114,6 @@ class WalletServiceCLI:
         print(trr)
         print("----")
 
-
     def revoke_reserved_tokens_bk_connected_wallet(self, trr_hash, fee, wallet_password, veri_node_proxies, q, q_obj,
                                                    reactor_instance=None):
 
@@ -163,8 +166,6 @@ class WalletServiceCLI:
     def check_pending_tokens_on_blockchain(self):
         pass
 
-    def validate_balance_on_blockchain(self):
-        pass
 
     def automatic_network_refresh(self, q_object, q_for_active,reactor_instance):
         """

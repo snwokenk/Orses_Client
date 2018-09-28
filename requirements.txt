@@ -1,5 +1,5 @@
 Twisted=>17.9.0
-pycryptodome=>3.6.0
+pycryptodome==3.6.6
 service_identity==17.0.0
 pillow==5.0.0
 pyasn1-modules==0.2.2

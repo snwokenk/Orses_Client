@@ -33,7 +33,16 @@ def check_active_peers():
         return
 
 
-def reserve_tokens(amount, fee, wallet_password, time_limit, instance_of_self):
+def reserve_tokens(amount, fee, wallet_password, time_limit, callback_func):
+    """
+
+    :param amount:
+    :param fee:
+    :param wallet_password:
+    :param time_limit:
+    :param callback_func: MainWalletMenuFrame.should be reserve_token_network_response()
+    :return:
+    """
     q_obj = queue.Queue()
     veri_node_proxies = ["ID-01f", "ID-256a"]
 
@@ -44,18 +53,18 @@ def reserve_tokens(amount, fee, wallet_password, time_limit, instance_of_self):
     else:
         q_obj.put("time_limit")
         response_deferred = threads.deferToThread(q_obj.get)
-        response_deferred.addCallback(instance_of_self.reserve_token_network_response)
+        response_deferred.addCallback(callback_func)
         return None
 
     if amount < 250000.0:
         q_obj.put("low_amount")
         response_deferred = threads.deferToThread(q_obj.get)
-        response_deferred.addCallback(instance_of_self.reserve_token_network_response)
+        response_deferred.addCallback(callback_func)
         return None
     if fee < 1.0:
         q_obj.put("low_fee")
         response_deferred = threads.deferToThread(q_obj.get)
-        response_deferred.addCallback(instance_of_self.reserve_token_network_response)
+        response_deferred.addCallback(callback_func)
         return None
 
     reactor.callFromThread(
@@ -69,10 +78,20 @@ def reserve_tokens(amount, fee, wallet_password, time_limit, instance_of_self):
         reactor_instance=reactor
     )
     response_deferred = threads.deferToThread(q_obj.get)
-    response_deferred.addCallback(instance_of_self.reserve_token_network_response)
+    response_deferred.addCallback(callback_func)
 
 
-def send_tokens(amount, fee, receiving_wid, password_for_wallet, instance_of_self, min_ttx_amt=40):
+def send_tokens(amount, fee, receiving_wid, password_for_wallet, callback_func, min_ttx_amt=40):
+    """
+    the callback function
+    :param amount:
+    :param fee:
+    :param receiving_wid:
+    :param password_for_wallet:
+    :param callback_func: function which uses the response received by q_obj for whatever (for display or for a trigger)
+    :param min_ttx_amt:
+    :return:
+    """
     q_obj = queue.Queue()
 
     if amount < min_ttx_amt:
@@ -103,7 +122,7 @@ def send_tokens(amount, fee, receiving_wid, password_for_wallet, instance_of_sel
 
         )
     response_deferred = threads.deferToThread(q_obj.get)
-    response_deferred.addCallback(instance_of_self.send_token_network_response)
+    response_deferred.addCallback(callback_func)  # send_token_network_response
 
 
 def periodic_network_check(label_widget, wscli):
@@ -1922,7 +1941,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             cancel_submit_frame,
             text="SEND",
             width=cancel_button_width,
-            command=lambda: (submit_button.state(["disabled"]),send_tokens(self.send_amount_float.get(), self.send_amount_fee_float.get(), self.wallet_address_text.get(), self.wallet_password_text.get(), self),
+            command=lambda: (submit_button.state(["disabled"]),send_tokens(self.send_amount_float.get(), self.send_amount_fee_float.get(), self.wallet_address_text.get(), self.wallet_password_text.get(), self.send_token_network_response),
                              sending_label.grid(row=10, sticky=N), root.update(),sending_label.grid_configure(padx=get_padx(self.send_token_form_frame, sending_label))),
             default="active",
             style="submit.TButton"
@@ -2052,7 +2071,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
             cancel_submit_frame,
             text="SEND",
             width=cancel_button_width,
-            command=lambda: (submit_button.state(["disabled"]), reserve_tokens(self.reserve_amount_float.get(), self.reserve_amount_fee_float.get(), self.reserve_wallet_password_text.get(), self.reserve_length_float.get(), self),
+            command=lambda: (submit_button.state(["disabled"]), reserve_tokens(self.reserve_amount_float.get(), self.reserve_amount_fee_float.get(), self.reserve_wallet_password_text.get(), self.reserve_length_float.get(), self.reserve_token_network_response),
                              reserving_label.grid(row=10, sticky=N), root.update(),reserving_label.grid_configure(padx=get_padx(self.send_token_form_frame, reserving_label))),
             default="active",
             style="submit.TButton"
