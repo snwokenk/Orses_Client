@@ -19,6 +19,8 @@ import queue, time
 begin needed functions
 """
 
+# todo: link validate_balance_on_blockchain() to button for Validate
+
 
 def check_active_peers():
     """
@@ -31,6 +33,17 @@ def check_active_peers():
         reactor.callFromThread(WSCLI.check_active_peers, reactor_instance=reactor)
     else:
         return
+
+
+def get_balance():
+
+    q_obj = queue.Queue()
+
+    reactor.callFromThread(
+        WSCLI.validate_balance_on_blockchain,
+        q_obj=q_obj,
+        reactor_instance=reactor
+    )
 
 
 def reserve_tokens(amount, fee, wallet_password, time_limit, callback_func):

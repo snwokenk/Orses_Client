@@ -31,9 +31,22 @@ class WalletServiceCLI:
         if self.nm:
             self.nm.get_active_peers()
 
-    def validate_balance_on_blockchain(self):
+    def validate_balance_on_blockchain(self, q_obj, reactor_instance):
         # todo: sep 28 2018, Write this logic
-        pass
+        # todo: connect to GUI
+        loaded_wallet = self.user.wallet_service_instance.wallet_instance
+
+        if loaded_wallet:
+            wallet_id = loaded_wallet.get_wallet_id()
+
+            reactor_instance.callFromThread(
+                self.nm.request_balance_from_from_network,
+                wallet_id=wallet_id,
+                reactor_instance=reactor_instance,
+                q_object_from_walletcli=q_obj
+            )
+        else:
+            q_obj.put(-1.0)
 
     def send_tokens(self, amount, fee, receiving_wid, password_for_wallet, q_obj, reactor_instance=None):
 
