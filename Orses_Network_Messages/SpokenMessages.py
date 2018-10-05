@@ -28,6 +28,7 @@ class SpokenMessages:
                                                                           "be and iterable (list, set, tuple) "
         self.wallet_pubkey = json.dumps(wallet_pubkey).encode()  # {"x": base85 string, "y": base85 string}
         self.messages_to_be_spoken = iter(messages_to_be_spoken)
+        self.messages_to_be_spoken_raw = messages_to_be_spoken
 
         self.messages_heard = list()
         self.last_msg = b'end'
@@ -61,14 +62,23 @@ class SpokenMessages:
         """
         self.messages_heard.append(msg)
 
-    def follow_up(self):
+    def follow_up(self, **kwargs):
         """
         call this function in Protocol.connectionLost()
         this function generally stores messages in database of message. while storing it notes if the message
         was verified, rejected or incomplete (connection was closed or lost)
         :return:
         """
-        pass
+        if self.end_convo:
+            q_obj = kwargs.get("q_obj", None)
+            try:
+                q_obj.put(self.messages_heard[-1].decode())
+            except AttributeError as e:
+                print(f"in spokenmessages.py, follow_up {e}\n"
+                      f"tx_reason is {self.messages_to_be_spoken_raw[1].decode()}")
+
+
+
 
 
 class NetworkMessages:

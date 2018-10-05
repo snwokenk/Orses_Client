@@ -38,10 +38,9 @@ class WalletServiceCLI:
 
         if loaded_wallet:
             wallet_id = loaded_wallet.get_wallet_id()
-
             reactor_instance.callFromThread(
                 self.nm.request_balance_from_from_network,
-                wallet_id=wallet_id,
+                wallet_id=wallet_id.encode(),
                 reactor_instance=reactor_instance,
                 q_object_from_walletcli=q_obj
             )
@@ -75,6 +74,24 @@ class WalletServiceCLI:
         print('----')
         print(stmt)
         print("----")
+
+    def misc_messages(self, msg, purpose, password_for_wallet, q_obj, reactor_instance=None):
+        misc_msg = self.user.create_a_misc_message(
+            msg=msg,
+            purp=purpose,
+            password_for_wallet=password_for_wallet
+        )
+
+        if misc_msg:
+            reactor_instance.callFromThread(
+                self.nm.send_misc_messages,
+                transfer_tx=misc_msg,
+                reactor_instance=reactor_instance,
+                wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key(),
+                q_object_from_walletcli=q_obj
+            )
+        else:
+            q_obj.put(-1.0)
 
     def transfer_tokens(self, amount, receiving_wid, fee, password_for_wallet, q_obj, reactor_instance=None):
 

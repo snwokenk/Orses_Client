@@ -1,10 +1,97 @@
 from Orses_User.User import User
 from Orses_Wallet.WalletService_CLI_Helper import WalletServiceCLI
-import json
+import json, queue
+
+from twisted.internet import reactor, threads
 
 
-if __name__ == '__main__':
+# used to test for newly created wallet with no tokens receiving tokens
+# then sending misc messages
 
+def call_when_running(callable_function, **kwargs):
+
+    d = threads.deferToThread(callable_function, reactor, **kwargs)
+    d.addCallback(lambda x: reactor.stop())
+    d.addErrback(lambda x: print(x))
+
+
+def test_one(reactor_inst, ):
+    """
+    pass to call_when_running
+    :return:
+    """
+
+    # load already created user
+
+    user2 = User(
+        username="autotest1",
+        password="abcdefgh"
+    ).load_user()
+
+    # check if user is  none
+    if user2 is None:
+        print("create a user names 'autotest1' with password 'abcdefgh'\n"
+              "then create a wallet name 'autowallet1' with password 'abcdefgh'")
+        return
+
+    # load already created wallet if user is not none
+    user2.load_wallet(
+        wallet_nickname='autowallet1',
+        password='abcdefgh'
+    )
+
+    # create queue object
+
+    q_obj = queue.Queue()
+
+    # instantiate wallet service CLI  (Name should be changed soon)
+    w2 = WalletServiceCLI(
+        user=user2
+    )
+
+    print("checking balance")
+    # validate balance: balance
+    w2.validate_balance_on_blockchain(
+        q_obj=q_obj,
+        reactor_instance=reactor_inst
+    )
+
+    # wait for response
+
+    try:
+        balance = q_obj.get(timeout=7)
+
+    except queue.Empty:
+        print(f"Response timed out")
+        return
+
+    print(f"Balance of autowallet1 {balance}")
+
+    input("Send some tokens to this wallet using another wallet with tokens on the blockchain\n"
+          " wait for it to be included in blockchain then validate balance again")
+
+
+    print("checking for balance again")
+    # validate balance: balance
+    w2.validate_balance_on_blockchain(
+        q_obj=q_obj,
+        reactor_instance=reactor_inst
+    )
+
+    try:
+        balance = q_obj.get(timeout=10)
+
+    except queue.Empty:
+        print(f"Response timed out")
+        return
+
+    print(balance)
+
+    return
+
+
+
+def main():
     create = False
     createWallet = False
 
@@ -31,6 +118,21 @@ if __name__ == '__main__':
     wlci = WalletServiceCLI(user=user1)
     print("11", wlci)
     print("in OrsesCLITest.py Keys are validated: ", wlci.validate_wallet_keys("7433xxxxxx"))
+
+
+if __name__ == '__main__':
+
+    try:
+        reactor.callWhenRunning(
+            call_when_running,
+            callable_function=test_one,
+        )
+
+        reactor.run()
+    except KeyboardInterrupt:
+
+        reactor.stop()
+        print("Keyboard interrupted")
 
 
     # wlci.list_activities_of_wallet()

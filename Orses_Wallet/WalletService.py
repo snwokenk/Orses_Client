@@ -1,7 +1,8 @@
 from Orses_Wallet import Wallet
 from Orses_Util import Filenames_VariableNames, FileAction
 from Orses_Cryptography.PKIGeneration import WalletPKI
-from Orses_Message import AssignmentStatement, TransferTransaction, TokenReservationRequest, TokenReservationRevoke
+from Orses_Message import AssignmentStatement, TransferTransaction, TokenReservationRequest, TokenReservationRevoke, \
+    MiscMessages
 
 # TODO: in associated_wallets create a w
 
@@ -214,6 +215,20 @@ class WalletServices:
             return assignment_statement
         else:
             return {}
+
+    def misc_messages(self, msg, purp, password_for_wallet):
+        misc_msg_obj = MiscMessages.MiscMessages(
+            msg=msg,
+            sending_wid=self.wallet_instance.get_wallet_id(),
+            purp=purp
+        )
+
+        misc_msg = misc_msg_obj.sign_and_return_misc_message(
+            wallet_privkey=self.get_privkey_of_wallet(password=password_for_wallet),
+            wallet_pubkey=self.wallet_instance.wallet_pub_key
+        )
+
+        return misc_msg
 
     def transfer_tokens(self, receiving_wid, amount, fee, password_for_wallet):
         transfer_tx_obj = TransferTransaction.TokenTransferTransaction(

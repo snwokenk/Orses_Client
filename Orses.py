@@ -19,6 +19,10 @@ import queue, time
 begin needed functions
 """
 
+
+# todo: refactor OsesCLITest that checks balance and sends misc messages
+# todo: add send misc messages to Orses.py
+# todo: write MiscMessage class and MiscMessageValidator
 # todo: link validate_balance_on_blockchain() to button for Validate
 
 

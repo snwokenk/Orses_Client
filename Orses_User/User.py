@@ -11,6 +11,7 @@ from Orses_Network_Messages.Assgn_Stmt_Msg_Class import AssignmentStatementValid
 from Orses_Network_Messages.Transfer_Tx_Msg_Class import TransferTransactionValidator
 from Orses_Network_Messages.Tkn_Rsv_Req_Msg_Class import TokenReservationRequestValidator
 from Orses_Network_Messages.Tkn_Rvk_Req_Msg_Class import TokenRevokeRequestValidator
+from Orses_Network_Messages.Misc_Messages_Msg_Class import MiscMessageValidator
 
 
 from Crypto.Hash import SHA256, RIPEMD160
@@ -361,6 +362,31 @@ class User:
                 return assignment_statement
 
         elif not assignment_statement:
+            return False
+
+        return None
+
+    def create_a_misc_message(self, msg, purp, password_for_wallet):
+
+        misc_msg = self.wallet_service_instance.misc_messages(
+            msg=msg,
+            password_for_wallet=password_for_wallet,
+            purp=purp
+        )
+
+        print(f"in user.py, misc msg {misc_msg}")
+        if misc_msg:
+            rsp = MiscMessageValidator(
+                misc_msg_dict=misc_msg,
+                wallet_pubkey=self.wallet_service_instance.wallet_instance.get_wallet_pub_key(),
+                user_instance=self
+            ).check_validity()
+
+            if rsp is True:
+                misc_msg = json.dumps(misc_msg).encode()
+
+                return misc_msg
+        elif not misc_msg:
             return False
 
         return None

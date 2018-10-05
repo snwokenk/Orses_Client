@@ -40,8 +40,8 @@ class AssignmentStatementValidator:
         return base64.b85decode(self.sending_wallet_pubkey['x'].encode())+base64.b85decode(self.sending_wallet_pubkey['y'].encode())
 
     def check_validity(self):
-        if (self.check_client_id_owner_of_wallet(),
-                self.check_signature_valid(),
+        if (self.check_client_id_owner_of_wallet() and
+                self.check_signature_valid() and
                 self.check_timestamp()):
             self.user.wallet_service_instance.wallet_instance.update_to_activites(
                 activity_type="asgn_stmt", tx_obj=self.asgn_stmt_list, act_hash=self.stmt_hash)

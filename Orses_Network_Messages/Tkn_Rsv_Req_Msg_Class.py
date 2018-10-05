@@ -24,9 +24,9 @@ class TokenReservationRequestValidator:
         return base64.b85decode(self.wallet_pubkey['x'].encode())+base64.b85decode(self.wallet_pubkey['y'].encode())
 
     def check_validity(self):
-        if (self.check_client_id_owner_of_wallet(),
-                self.check_signature_valid(),
-                self.check_minimum_time(),
+        if (self.check_client_id_owner_of_wallet() and
+                self.check_signature_valid() and
+                self.check_minimum_time() and
                 self.check_if_wallet_has_enough_token()):
 
             # update activities of wallet

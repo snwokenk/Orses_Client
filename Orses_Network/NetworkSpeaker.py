@@ -39,21 +39,35 @@ class NetworkSpeaker(Protocol):
     def dataReceived(self, data):
 
         # listens and appends msg to list in self.message_object
+
+        print(f"in Networkspeaker, data {data}")
         self.message_object.listen(data)
 
         # if end_convo is true then ends connection
         if self.message_object.end_convo:
+
+            # check if is expecting data, if so follow up
+            if self.factory.is_expecting_data:
+
+                # this will send the last message
+                self.message_object.follow_up()
             self.transport.loseConnection()
         else:
             # speaks to other node, before speaking checks listen list
-            self.transport.write(self.message_object.speak())
+            rsp = self.message_object.speak()
+            print(rsp)
+            self.transport.write(rsp)
 
     def connectionMade(self):
         self.transport.write(self.message_object.speak())
         self.factory.total_connected += 1
 
     def connectionLost(self, reason=connectionDone):
-        self.message_object.follow_up()
+
+        if self.factory.is_expecting_data:
+            self.message_object.follow_up(q_obj=self.factory.q_object)
+        else:
+            self.message_object.follow_up()
         print("connection lost", self.message_object.messages_heard[-1] == b'ver')
         if self.message_object.messages_heard[-1] == b'ver':
             self.factory.total_verified += 1
@@ -69,7 +83,7 @@ class NetworkSpeakerFactory(ReconnectingClientFactory):
 
     """
 
-    def __init__(self, spkn_msg_obj_creator, queue_obj, exp_conn):
+    def __init__(self, spkn_msg_obj_creator, queue_obj, exp_conn, is_expecting_data=False):
         ReconnectingClientFactory().__init__()
         self.message_object = spkn_msg_obj_creator
         self.maxRetries = 1
@@ -79,6 +93,7 @@ class NetworkSpeakerFactory(ReconnectingClientFactory):
         self.total_rejected = 0
         self.total_conn_fail = 0
         self.q_object = queue_obj
+        self.is_expecting_data = is_expecting_data
 
     def clientConnectionLost(self, connector, reason):
 
@@ -121,11 +136,16 @@ class NetworkSpeakerFactory(ReconnectingClientFactory):
         """
 
         if self.total_connected + self.total_conn_fail == self.exp_conn:
+
+            # mainly when sending tokens, if most nodes verify transacation then it is considered a success
             if self.total_verified:
                 self.q_object.put(self.total_verified/self.exp_conn)
             else:
                 print("all connections tried")
-                self.q_object.put(0.00)
+
+                # if is_expecting_data is true, data is sent during follow_up
+                if self.is_expecting_data is False:
+                    self.q_object.put(0.00)
 
     def buildProtocol(self, addr):
         return NetworkSpeaker(message_object=self.message_object(), factory=self)

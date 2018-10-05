@@ -37,7 +37,7 @@ class NetworkManager:
         addresses = self.net_addr_mgr.get_active_peers()  # returns list of address list [["ip address", port], ]
 
         factory = NetworkSpeakerFactory(spkn_msg_obj_creator=spkn_msg_obj_creator_callable,
-                                        queue_obj=q_object_from_walletcli, exp_conn=1)
+                                        queue_obj=q_object_from_walletcli, exp_conn=1, is_expecting_data=True)
 
         if addresses:  # if any addresses not empty
             for i in addresses:
@@ -67,6 +67,22 @@ class NetworkManager:
 
 
         # reactor_instance.connectTCP(host="127.0.0.1", port=55600, factory=factory)
+
+    def send_misc_messages(self, misc_message, wallet_pubkey, reactor_instance, q_object_from_walletcli):
+        spkn_msg_obj_creator_callable = NetworkMessages.message_to_be_spoken_creator(main_msg=misc_message,
+                                                                                     wallet_pubkey=wallet_pubkey,
+                                                                                     reason_msg=b'tx_ttx')
+
+        addresses = self.net_addr_mgr.get_active_peers()  # returns list of address list [["ip address", port], ]
+
+        factory = NetworkSpeakerFactory(spkn_msg_obj_creator=spkn_msg_obj_creator_callable,
+                                        queue_obj=q_object_from_walletcli, exp_conn=1)  # exp_conn is len(addresses)
+
+        if addresses:  # if any addresses not empty
+            for i in addresses:
+                reactor_instance.connectTCP(host=i, port=addresses[i], factory=factory)
+        else:  # if addresses empty send 0.00 as success rate, if this is not done, queue object waits forever
+            q_object_from_walletcli.put(0.00)
 
     def send_transfer_transaction(self, transfer_tx, wallet_pubkey, reactor_instance, q_object_from_walletcli):
         # Todo: for all update local balance only if 50% or more connections return "ver" message
