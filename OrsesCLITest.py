@@ -28,6 +28,7 @@ def test_one(reactor_inst, ):
         password="abcdefgh"
     ).load_user()
 
+
     # check if user is  none
     if user2 is None:
         print("create a user names 'autotest1' with password 'abcdefgh'\n"
@@ -39,6 +40,7 @@ def test_one(reactor_inst, ):
         wallet_nickname='autowallet1',
         password='abcdefgh'
     )
+
 
     # create queue object
 
@@ -88,36 +90,6 @@ def test_one(reactor_inst, ):
     print(balance)
 
     return
-
-
-
-def main():
-    create = False
-    createWallet = False
-
-    if create is True:
-        user1 = User(username="test2", password="7433xxxxxx", newUser=True)
-    elif create is False:
-        user1 = User(username="test2", password="7433xxxxxx").load_user()
-    else:
-        user1 =  User(username="test2", password="7433xxxxxx").import_user()
-
-    # print(user1.pubkey)
-    # print("\n\n-------")
-    # print(user1.privkey)
-
-    # create or load wallet
-    if createWallet is True:
-        print(user1.create_wallet("test2Wallet", "7433xxxxxx"))
-    else:
-        print("in OrsesCLITEST Wallet Loaded:  ", user1.load_wallet("test2Wallet", "7433xxxxxx"))
-
-    print("user wallet: ", user1.wallet_service_instance.wallet_instance)
-    # validate keys
-
-    wlci = WalletServiceCLI(user=user1)
-    print("11", wlci)
-    print("in OrsesCLITest.py Keys are validated: ", wlci.validate_wallet_keys("7433xxxxxx"))
 
 
 if __name__ == '__main__':

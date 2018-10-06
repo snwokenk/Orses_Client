@@ -40,7 +40,7 @@ class NetworkSpeaker(Protocol):
 
         # listens and appends msg to list in self.message_object
 
-        print(f"in Networkspeaker, data {data}")
+        # print(f"in Networkspeaker, data {data}")
         self.message_object.listen(data)
 
         # if end_convo is true then ends connection
@@ -55,7 +55,7 @@ class NetworkSpeaker(Protocol):
         else:
             # speaks to other node, before speaking checks listen list
             rsp = self.message_object.speak()
-            print(rsp)
+            # print(rsp)
             self.transport.write(rsp)
 
     def connectionMade(self):
