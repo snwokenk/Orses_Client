@@ -225,8 +225,10 @@ class WalletServices:
 
         misc_msg = misc_msg_obj.sign_and_return_misc_message(
             wallet_privkey=self.get_privkey_of_wallet(password=password_for_wallet),
-            wallet_pubkey=self.wallet_instance.wallet_pub_key
         )
+        if misc_msg:
+            misc_msg['wid'] = self.wallet_instance.get_wallet_id()
+            misc_msg['pk'] = self.wallet_instance.get_wallet_pub_key()
 
         return misc_msg
 

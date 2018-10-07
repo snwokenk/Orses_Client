@@ -21,7 +21,7 @@ class MiscMessages:
 
     def calc_msg_size(self, pubkey_key_size=100, hash_size=64, time_size=10, fee_size=10):
 
-        size_of_msg = len(self.msg) + len(self.purp)
+        size_of_msg = len(self.msg) + len(self.purp) + len(str(self.timestamp))
         return size_of_msg + pubkey_key_size + hash_size + time_size + fee_size
 
     def determine_fee(self):
@@ -29,18 +29,20 @@ class MiscMessages:
         return round(self.calc_msg_size() * self.price_per_byte, 10)
 
     def create_misc_msg(self):
+        # todo: change back to self.determine_fee
 
         mm = {
             'msg': self.msg,
             'purp': self.purp,
             'time': self.timestamp,
             'fee': self.determine_fee()
+            # 'fee': 5000.00
 
         }
 
         return mm
 
-    def sign_and_return_misc_message(self, wallet_privkey, wallet_pubkey):
+    def sign_and_return_misc_message(self, wallet_privkey):
 
         if wallet_privkey:
             misc_msg = self.create_misc_msg()

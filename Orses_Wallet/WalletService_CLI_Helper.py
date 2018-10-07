@@ -81,11 +81,11 @@ class WalletServiceCLI:
             purp=purpose,
             password_for_wallet=password_for_wallet
         )
-
+        print(f"in wallet service cli", misc_msg)
         if misc_msg:
             reactor_instance.callFromThread(
                 self.nm.send_misc_messages,
-                transfer_tx=misc_msg,
+                misc_message=misc_msg,
                 reactor_instance=reactor_instance,
                 wallet_pubkey=self.user.wallet_service_instance.wallet_instance.get_wallet_pub_key(),
                 q_object_from_walletcli=q_obj

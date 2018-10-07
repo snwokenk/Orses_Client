@@ -18,6 +18,7 @@ class MiscMessageValidator:
         self.msg = self.main_msg["msg"]
         self.purp = self.main_msg["purp"]
         self.msg_fee = self.main_msg["fee"]
+        self.time = self.main_msg['time']
         self.timelimit = timelimit
         self.price_per_byte = price_per_byte
         self.msg_size = self.calc_msg_size()
@@ -69,9 +70,13 @@ class MiscMessageValidator:
             return False
         else:
             try:
-                if msg_fee >= int(round(self.user.wallet_service_instance.wallet_instance.get_balance(), 10) * 1e10):
+                if msg_fee <= int(round(self.user.wallet_service_instance.wallet_instance.get_balance(), 10) * 1e10):
                     return True
                 else:
+
+                    print(msg_fee)
+                    print(int(round(self.user.wallet_service_instance.wallet_instance.get_balance(), 10) * 1e10))
+
                     print(f"in MiscMessageValidator, msg_fee not enough")
                     return False
             except AttributeError as e:

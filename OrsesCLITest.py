@@ -92,12 +92,111 @@ def test_one(reactor_inst, ):
     return
 
 
+def test_two(reactor_inst, ):
+    """
+    pass to call_when_running
+    :return:
+    """
+
+    # load already created user
+
+    user2 = User(
+        username="bb1",
+        password=""
+    ).load_user()
+
+
+    # check if user is  none
+    if user2 is None:
+        print("create a user names 'autotest1' with password 'abcdefgh'\n"
+              "then create a wallet name 'autowallet1' with password 'abcdefgh'")
+        return
+
+    # load already created wallet if user is not none
+    user2.load_wallet(
+        wallet_nickname='bb11',
+        password=''
+    )
+
+    # create queue object
+
+    q_obj = queue.Queue()
+
+    # instantiate wallet service CLI  (Name should be changed soon)
+    w2 = WalletServiceCLI(
+        user=user2
+    )
+
+
+    print("checking for balance again")
+    # **** validate balance: balance ****
+    w2.validate_balance_on_blockchain(
+        q_obj=q_obj,
+        reactor_instance=reactor_inst
+    )
+
+    try:
+        balance = q_obj.get(timeout=10)
+
+    except queue.Empty:
+        print(f"Response timed out")
+        return
+
+    print(balance)
+
+    input("press enter to send misc message test")
+
+    # *** send misc messages ***
+    # w2.misc_messages(
+    #     msg="Help me do this",
+    #     purpose="misc",
+    #     password_for_wallet="7433xxxxxx",
+    #     q_obj=q_obj,
+    #     reactor_instance=reactor_inst
+    # )
+    #
+    # # wait for response
+    #
+    # try:
+    #     success_report = q_obj.get(timeout=7)
+    #
+    # except queue.Empty:
+    #     print(f"Response timed out")
+    #     return
+    #
+    # print(f"misc sent {success_report}")
+    #
+    # input("Send some tokens to this wallet using another wallet with tokens on the blockchain\n"
+    #       " wait for it to be included in blockchain then validate balance again")
+
+
+    print("checking for balance again")
+    # validate balance: balance
+    w2.validate_balance_on_blockchain(
+        q_obj=q_obj,
+        reactor_instance=reactor_inst
+    )
+
+    try:
+        balance = q_obj.get(timeout=10)
+
+    except queue.Empty:
+        print(f"Response timed out")
+        return
+
+    print(balance)
+
+    return
+
+
+
+
 if __name__ == '__main__':
 
     try:
         reactor.callWhenRunning(
             call_when_running,
-            callable_function=test_one,
+            callable_function=test_two,
         )
 
         reactor.run()

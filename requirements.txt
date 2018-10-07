@@ -1,4 +1,4 @@
-Twisted=>17.9.0
+Twisted>=17.9.0
 pycryptodome==3.6.6
 service_identity==17.0.0
 pillow==5.0.0

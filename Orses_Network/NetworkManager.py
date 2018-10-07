@@ -71,7 +71,7 @@ class NetworkManager:
     def send_misc_messages(self, misc_message, wallet_pubkey, reactor_instance, q_object_from_walletcli):
         spkn_msg_obj_creator_callable = NetworkMessages.message_to_be_spoken_creator(main_msg=misc_message,
                                                                                      wallet_pubkey=wallet_pubkey,
-                                                                                     reason_msg=b'tx_ttx')
+                                                                                     reason_msg=b'misc_msg')
 
         addresses = self.net_addr_mgr.get_active_peers()  # returns list of address list [["ip address", port], ]
 
