@@ -99,10 +99,10 @@ def test_two(reactor_inst, ):
     """
 
     # load already created user
-
+    password = input("wallet password")
     user2 = User(
         username="bb1",
-        password=""
+        password=password
     ).load_user()
 
 
@@ -127,8 +127,7 @@ def test_two(reactor_inst, ):
         user=user2
     )
 
-
-    print("checking for balance again")
+    print("checking for balance ")
     # **** validate balance: balance ****
     w2.validate_balance_on_blockchain(
         q_obj=q_obj,
@@ -144,37 +143,20 @@ def test_two(reactor_inst, ):
 
     print(balance)
 
-    input("press enter to send misc message test")
-
-    # *** send misc messages ***
-    # w2.misc_messages(
-    #     msg="Help me do this",
-    #     purpose="misc",
-    #     password_for_wallet="7433xxxxxx",
-    #     q_obj=q_obj,
-    #     reactor_instance=reactor_inst
-    # )
-    #
-    # # wait for response
-    #
-    # try:
-    #     success_report = q_obj.get(timeout=7)
-    #
-    # except queue.Empty:
-    #     print(f"Response timed out")
-    #     return
-    #
-    # print(f"misc sent {success_report}")
-    #
-    # input("Send some tokens to this wallet using another wallet with tokens on the blockchain\n"
-    #       " wait for it to be included in blockchain then validate balance again")
+    input("press enter to send reservation request")
 
 
-    print("checking for balance again")
-    # validate balance: balance
-    w2.validate_balance_on_blockchain(
+    verinode_proxies = input("Enter verinode proxies, separated by commas")
+    verinode_proxies = verinode_proxies.replace(" ", "")
+    verinode_proxies = verinode_proxies.split(",")
+    w2.reserve_tokens_bk_connected_wallet(
+        amount=251000.00,
+        fee=1.00,
+        time_limit=360.00,
+        veri_node_proxies=verinode_proxies,
         q_obj=q_obj,
-        reactor_instance=reactor_inst
+        wallet_password=password
+
     )
 
     try:

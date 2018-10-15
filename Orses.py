@@ -1500,7 +1500,7 @@ class MainWalletMenuFrame(MainWalletFrameForNotebook):
         self.reserve_token_form_frame = None
         self.reserve_amount_float = DoubleVar()
         self.reserve_amount_fee_float = DoubleVar(value=1.0)
-        self.reserve_length_float = DoubleVar(value=30.0)
+        self.reserve_length_float = DoubleVar(value=360.0)
         self.reserve_wallet_password_text = StringVar()
 
         self.network_response_deffered = None
