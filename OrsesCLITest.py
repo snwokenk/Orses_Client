@@ -92,30 +92,31 @@ def test_one(reactor_inst, ):
     return
 
 
-def test_two(reactor_inst, ):
+def test_two(reactor_inst, username="autotest1", wallet_nickname="autowallet1"):
     """
     pass to call_when_running
     :return:
     """
 
     # load already created user
-    password = input("wallet password")
+    password = input(f"user password for {username}")
     user2 = User(
-        username="bb1",
+        username=username,
         password=password
     ).load_user()
 
 
     # check if user is  none
-    if user2 is None:
+    if not user2:
         print("create a user names 'autotest1' with password 'abcdefgh'\n"
               "then create a wallet name 'autowallet1' with password 'abcdefgh'")
         return
-
+    password = input(f"wallet password for {wallet_nickname}")
     # load already created wallet if user is not none
+
     user2.load_wallet(
-        wallet_nickname='bb11',
-        password=''
+        wallet_nickname=wallet_nickname,
+        password=password
     )
 
     # create queue object
@@ -141,7 +142,7 @@ def test_two(reactor_inst, ):
         print(f"Response timed out")
         return
 
-    print(balance)
+    print(f"this is balance {balance}")
 
     input("press enter to send reservation request")
 
@@ -155,7 +156,8 @@ def test_two(reactor_inst, ):
         time_limit=360.00,
         veri_node_proxies=verinode_proxies,
         q_obj=q_obj,
-        wallet_password=password
+        wallet_password=password,
+        reactor_instance=reactor_inst
 
     )
 

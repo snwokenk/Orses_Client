@@ -36,6 +36,7 @@ class WalletServiceCLI:
         # todo: connect to GUI
         loaded_wallet = self.user.wallet_service_instance.wallet_instance
 
+        print(f"this is loaded wallet, Walletservice {loaded_wallet}")
         if loaded_wallet:
             wallet_id = loaded_wallet.get_wallet_id()
             reactor_instance.callFromThread(

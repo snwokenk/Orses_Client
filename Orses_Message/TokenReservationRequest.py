@@ -5,7 +5,7 @@ from Crypto.Hash import SHA256
 
 class TokenReservationRequest:
 
-    def __init__(self, requesting_wid, time_limit=30, tokens_to_reserve=250_000, fee=1):
+    def __init__(self, requesting_wid, time_limit=360, tokens_to_reserve=250_000, fee=1):
         """
 
         :param requesting_wid: hex id of wallet
@@ -19,7 +19,11 @@ class TokenReservationRequest:
         """
         self.req_wid = requesting_wid
         self.tokens_to_reserve = tokens_to_reserve
-        self.time_limit = time_limit  # in seconds
+        self.time_limit = time_limit  # in days
+
+        # converts time in days to seconds and if greater the 5 years (1 day extra for leap year) then default
+        # to 30 days
+        self.time_limit_seconds = int(self.time_limit * 86400) if self.time_limit <= 1826 else 2592000
         self.fee = fee
 
     def __create_token_reservation_request(self, veri_node_proxies):
@@ -37,7 +41,7 @@ class TokenReservationRequest:
             "amt": self.tokens_to_reserve,
             "fee": self.fee,
             "time": creation_time,
-            'exp': creation_time + self.time_limit,
+            'exp': creation_time + self.time_limit_seconds,
             'v_node_proxies': veri_node_proxies
 
         }

@@ -75,8 +75,30 @@ class TokenReservationRequestValidator:
         minimum time until ability to revoke = 648000 seconds (7.5 days)
         :return:
         """
+
+        if not int(time.time()) < int(self.timestamp + 300):  # first verify request not stale
+            return False
         rsp = (self.resevation_expiration - self.timestamp) >= 2592000  # 30 days in seconds
 
         print("minimum time check: ", rsp)
 
         return rsp
+
+    def check_inputs(self):
+        try:
+            amt = float(self.amount)
+            fee = float(self.fee)
+        except ValueError:
+            print("inputs Check: ", False)
+            return False
+        else:
+            if amt >= 250000.00 and fee >= 1.00:  # verify amt and fee is not negative
+                if (round(amt, 10) == amt) and (round(fee, 10) == fee):
+                    print("inputs Check: ", True)
+                    return True
+                else:
+                    print("inputs fee and amount are more than 10 decimal places.\n"
+                          "Orses native tokens are divisible by a max 10 billion places")
+
+            print("inputs Check: ", False)
+            return False
