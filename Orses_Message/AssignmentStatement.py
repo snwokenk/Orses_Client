@@ -17,7 +17,7 @@ Things an assignment statement needs:
 
 class AssignmentStatement:
     def __init__(self, sending_wid, receiving_wid, bk_connected_wid, amount_of_tokens,
-                 fee=0.0001, timelimit=300):
+                 fee=0.0001, timelimit=360):
         self.sending_wid = sending_wid
         self.receiving_wid = receiving_wid
         self.bk_connected_wid = bk_connected_wid

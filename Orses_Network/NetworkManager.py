@@ -57,7 +57,7 @@ class NetworkManager:
         addresses = self.net_addr_mgr.get_active_peers()  # returns list of address list [["ip address", port], ]
 
         factory = NetworkSpeakerFactory(spkn_msg_obj_creator=spkn_msg_obj_creator_callable,
-                                        queue_obj=q_object_from_walletcli, exp_conn=1)
+                                        queue_obj=q_object_from_walletcli, exp_conn=1, is_expecting_data=True)
 
         if addresses:  # if any addresses not empty
             for i in addresses:

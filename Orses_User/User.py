@@ -345,7 +345,7 @@ class User:
         print("in create_sign_asgn")
         assignment_statement = \
         self.wallet_service_instance.assign_tokens(
-            receiving_wid=receiving_wid, bk_connected_wid="0123456789abcdef", amount_of_tokens=amount,
+            receiving_wid=receiving_wid, bk_connected_wid="W0f869cdbc270f73f26a975a076def7c4553826e5", amount_of_tokens=amount,
             password_for_wallet=password_for_wallet, fee=fee)
 
         if assignment_statement:
