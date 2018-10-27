@@ -71,6 +71,8 @@ class NetworkSpeaker(Protocol):
         print("connection lost", self.message_object.messages_heard[-1] == b'ver')
         if self.message_object.messages_heard[-1] == b'ver':
             self.factory.total_verified += 1
+        elif self.message_object.messages_heard[-1].decode()[0] in {"[", "{"}:  # should be a verification
+            self.factory.total_verified += 1
         elif self.message_object.messages_heard[-1] == b'rej':
             self.factory.total_rejected += 1
         else:

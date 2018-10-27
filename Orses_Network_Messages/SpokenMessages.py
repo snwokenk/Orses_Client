@@ -35,6 +35,7 @@ class SpokenMessages:
         self.reject_msg = b'rej'
         self.verified_msg = b'ver'
         self.end_convo = False
+        self.followed_up = False
 
     def speak(self):
         """
@@ -69,13 +70,17 @@ class SpokenMessages:
         was verified, rejected or incomplete (connection was closed or lost)
         :return:
         """
-        if self.end_convo:
-            q_obj = kwargs.get("q_obj", None)
-            try:
-                q_obj.put(self.messages_heard[-1].decode())
-            except AttributeError as e:
-                print(f"in spokenmessages.py, follow_up {e}\n"
-                      f"tx_reason is {self.messages_to_be_spoken_raw[1].decode()}")
+
+        if self.followed_up is False:
+
+            if self.end_convo:
+                self.followed_up = True
+                q_obj = kwargs.get("q_obj", None)
+                try:
+                    q_obj.put(self.messages_heard[-1].decode())
+                except AttributeError as e:
+                    print(f"in spokenmessages.py, follow_up {e}\n"
+                          f"tx_reason is {self.messages_to_be_spoken_raw[1].decode()}")
 
 
 
